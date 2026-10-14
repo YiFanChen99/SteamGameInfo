@@ -1,12 +1,30 @@
 # Tampermonkey: Steamgifts Helper
 
+## Features
+
+對 SteamGifts 特定頁面，撈出相關特定對照資料，整合填過來顯示在頁面上：
+
+- 這款遊戲我想要的程度？
+- 區域限制涵蓋多少區域數量？
+
 ## Installation
 
 1. Install [Violentmonkey](https://addons.mozilla.org/en-us/firefox/addon/violentmonkey/) (Firefox) or [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) (Chrome) / [Tampermonkey](https://addons.opera.com/en/extensions/details/tampermonkey-beta/) (Opera).
 2. Open `https://yifanchen99.github.io/tampermonkey--steamgifts-helper/Script.user.js` or click [here](https://yifanchen99.github.io/tampermonkey--steamgifts-helper/Script.user.js)
 3. Click `Install`.
 
-## 開發
+## Usage
+
+自動在作用頁面是列表頁（`/giveaways/search`）與單一抽獎頁（`/giveaway/`）時，標記：
+
+- **這款遊戲我想不想要？** 撈特定的一份 Google Sheet。在點數後面附上期待度，例如 `(W3)`。如果該筆紀錄太久沒更新，再多標一個更新年份，例如 `(Y19)`。
+- **區域限制涵蓋多少區域數量？** 有區域限制的抽獎，解析出區域數量，補在區域圖示旁邊。
+
+撈取的資料有快取機制。
+
+## Development
+
+### Build & Deploy
 
 原始碼是 TypeScript，`npm run build` 用 esbuild 打包成單一支 `dist/Script.user.js`（不壓縮，因為使用者會在 Tampermonkey 裡直接讀到它）。
 
@@ -20,11 +38,11 @@ npm run build      # 產出 dist/Script.user.js
 
 metadata block 的唯一來源是 `scripts/metadata.mjs`，build 時產生。省略 `@updateURL`，讓 Tampermonkey 直接用 `@downloadURL` 做更新檢查，所以不需要額外維護 `.meta.js`。
 
-## 實作說明
+### Architecture
 
 `src/main.ts` 是進入點，依網址判斷是列表頁（`/giveaways/search`）或單一頁（`/giveaway/`），再呼叫對應的 modifier。
 
-### `src/sheetFetcher.ts` — 取資料
+#### `src/sheetFetcher.ts` — 取資料
 
 負責從 Google App Script 取得 sheet 內容，並使用快取。
 
@@ -34,7 +52,7 @@ metadata block 的唯一來源是 `scripts/metadata.mjs`，build 時產生。省
 
 sheet 資料以欄位代號存取（`B` 遊戲名、`G` 日期、`K` 想要程度，見 `src/types.ts`），這一層不對內容做任何加工。
 
-### `src/domModifier.ts` — 比對與改 DOM
+#### `src/domModifier.ts` — 比對與改 DOM
 
 把 sheet 資料對應到畫面上的遊戲，並將結果附加上去。
 
