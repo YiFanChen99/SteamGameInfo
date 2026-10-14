@@ -3,7 +3,12 @@
  *
  * `@updateURL` is intentionally omitted: when absent, Tampermonkey falls back to
  * `@downloadURL` for update checks, so there is no second file to keep in sync.
+ *
+ * `version`, `description` and `author` are read from package.json so they cannot drift.
+ * `name` stays separate: package.json holds the npm slug, this holds the display name.
  */
+
+import pkg from '../package.json' with { type: 'json' };
 
 const pagesBaseUrl = 'https://yifanchen99.github.io/tampermonkey--steamgifts-annotator';
 
@@ -11,9 +16,9 @@ const pagesBaseUrl = 'https://yifanchen99.github.io/tampermonkey--steamgifts-ann
 export const metadata = {
     name: 'Ekko SteamGifts Annotator',
     namespace: 'https://github.com/YiFanChen99/tampermonkey--steamgifts-annotator',
-    version: '2.0.0',
-    description: 'Annotate SteamGifts giveaways with wishlist rating (from Google Sheet) and region-restriction count',
-    author: 'YiFanChen99',
+    version: pkg.version,
+    description: pkg.description,
+    author: pkg.author,
     match: [
         '*://www.steamgifts.com/giveaways/search*',
         '*://www.steamgifts.com/giveaway/*',
