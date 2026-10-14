@@ -9,7 +9,7 @@ import { getOrFetchData } from './sheetFetcher';
  */
 async function main(): Promise<void> {
     const sheetData = await getOrFetchData();
-    console.log('Steamgifts-helper: updated');
+    console.log('SG-Annotator: updated');
 
     const pathname = window.location.pathname;
     let isGiveawaysPage: boolean;
@@ -18,7 +18,7 @@ async function main(): Promise<void> {
     } else if (pathname.startsWith('/giveaway/')) {
         isGiveawaysPage = false;
     } else {
-        console.warn(`Steamgifts-helper: No modification applied. (Unknown page: ${pathname})`);
+        console.warn(`SG-Annotator: No modification applied. (Unknown page: ${pathname})`);
         return;
     }
 
@@ -26,14 +26,14 @@ async function main(): Promise<void> {
     const regionModifier = new RegionModifier();
     if (isGiveawaysPage) {
         const count = headerModifier.modifyGiveaways();
-        console.log(`Steamgifts-helper: \`giveaways\` ${count} headers modified`);
+        console.log(`SG-Annotator: \`giveaways\` ${count} headers modified`);
         const regionCount = await regionModifier.modifyGiveaways();
-        console.log(`Steamgifts-helper: \`giveaways\` ${regionCount} region tags modified`);
+        console.log(`SG-Annotator: \`giveaways\` ${regionCount} region tags modified`);
     } else {
         const done = headerModifier.modifyGiveaway();
-        console.log(`Steamgifts-helper: \`giveaway\` ${done ? 'headers modified' : 'No headers modification applied.'}`);
+        console.log(`SG-Annotator: \`giveaway\` ${done ? 'headers modified' : 'No headers modification applied.'}`);
         const regionDone = await regionModifier.modifyGiveaway();
-        console.log(`Steamgifts-helper: \`giveaway\` ${regionDone ? 'region tags modified' : 'No region tags modification applied.'}`);
+        console.log(`SG-Annotator: \`giveaway\` ${regionDone ? 'region tags modified' : 'No region tags modification applied.'}`);
     }
 }
 

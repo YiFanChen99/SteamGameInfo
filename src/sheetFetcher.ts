@@ -14,7 +14,7 @@ function getWebAppUrl(): string {
 }
 
 async function fetchData(): Promise<SheetData> {
-    console.log('Steamgifts-helper: fetchData starting ...');
+    console.log('SG-Annotator: fetchData starting ...');
     return new Promise(resolve => {
         GM_xmlhttpRequest({
             method: 'GET',
