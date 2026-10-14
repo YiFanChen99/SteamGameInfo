@@ -26,6 +26,8 @@ export const metadata = {
     grant: 'GM_xmlhttpRequest',
     connect: [
         'script.google.com',
+        // Apps Script web apps 302-redirect /exec responses here.
+        'script.googleusercontent.com',
         'www.steamgifts.com',
     ],
     icon: `${pagesBaseUrl}/favicon.ico`,
