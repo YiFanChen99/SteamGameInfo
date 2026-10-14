@@ -5,14 +5,14 @@
  * `@downloadURL` for update checks, so there is no second file to keep in sync.
  */
 
-const pagesBaseUrl = 'https://yifanchen99.github.io/tampermonkey--steamgifts-helper';
+const pagesBaseUrl = 'https://yifanchen99.github.io/tampermonkey--steamgifts-annotator';
 
 /** Repeated keys (`match`, `connect`) are expressed as arrays. */
 export const metadata = {
-    name: 'Ekko Steamgifts Helper',
-    namespace: 'https://github.com/YiFanChen99/tampermonkey--steamgifts-helper',
-    version: '1.4.0',
-    description: 'Fetch games from Google Sheet via App Script',
+    name: 'Ekko SteamGifts Annotator',
+    namespace: 'https://github.com/YiFanChen99/tampermonkey--steamgifts-annotator',
+    version: '2.0.0',
+    description: 'Annotate SteamGifts giveaways with wishlist rating (from Google Sheet) and region-restriction count',
     author: 'YiFanChen99',
     match: [
         '*://www.steamgifts.com/giveaways/search*',

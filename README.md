@@ -1,4 +1,4 @@
-# Tampermonkey: Steamgifts Helper
+# Tampermonkey: Ekko SteamGifts Annotator
 
 ## Features
 
@@ -10,7 +10,7 @@
 ## Installation
 
 1. Install [Violentmonkey](https://addons.mozilla.org/en-us/firefox/addon/violentmonkey/) (Firefox) or [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) (Chrome) / [Tampermonkey](https://addons.opera.com/en/extensions/details/tampermonkey-beta/) (Opera).
-2. Open `https://yifanchen99.github.io/tampermonkey--steamgifts-helper/Script.user.js` or click [here](https://yifanchen99.github.io/tampermonkey--steamgifts-helper/Script.user.js)
+2. Open `https://yifanchen99.github.io/tampermonkey--steamgifts-annotator/Script.user.js` or click [here](https://yifanchen99.github.io/tampermonkey--steamgifts-annotator/Script.user.js)
 3. Click `Install`.
 
 ## Usage
