@@ -47,6 +47,19 @@ function trimAppReviews(json) {
     };
 }
 
+/** Same as `appReviewsUrl` in src/urls.ts, which this script cannot import. Keep them in sync. */
+const appReviewsQuery = new URLSearchParams({
+    json: '1',
+    filter: 'all',
+    day_range: '30',
+    language: 'all',
+    review_type: 'all',
+    purchase_type: 'all',
+    filter_offtopic_activity: '0',
+    use_review_quality: '1',
+    num_per_page: '40',
+}).toString();
+
 const dir = new URL('../test/fixtures/', import.meta.url);
 await mkdir(new URL('store/', dir), { recursive: true });
 await mkdir(new URL('appreviews/', dir), { recursive: true });
@@ -55,9 +68,7 @@ for (const appId of Object.keys(apps)) {
     const html = await fetchText(`https://store.steampowered.com/app/${appId}/?l=tchinese&cc=tw`);
     await writeFile(new URL(`store/${appId}.html`, dir), html);
 
-    const reviews = await fetchText(
-        `https://store.steampowered.com/appreviews/${appId}?json=1&language=all&purchase_type=all&filter=all&num_per_page=50`
-    );
+    const reviews = await fetchText(`https://store.steampowered.com/appreviews/${appId}?${appReviewsQuery}`);
     await writeFile(new URL(`appreviews/${appId}.json`, dir), `${JSON.stringify(trimAppReviews(reviews), null, 2)}\n`);
 
     console.log(`fetched ${appId}`);

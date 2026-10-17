@@ -3,7 +3,7 @@
 由 `pnpm --filter @watchlist/steam-info-scraper fixtures`（`scripts/fetch-fixtures.mjs`）抓取，2026-10-17。
 
 - `store/<appid>.html`：以匿名訪客抓的商店頁（`l=tchinese&cc=tw`）
-- `appreviews/<appid>.json`：`/appreviews/<appid>?json=1&language=all&purchase_type=all&filter=all&num_per_page=50`，只保留解析會讀的欄位，不含評論內文
+- `appreviews/<appid>.json`：用跟 `src/urls.ts` 的 `appReviewsUrl` 相同的參數抓取，只保留解析會讀的欄位，不含評論內文。目前的檔案是 2026-10-17 用舊參數（`num_per_page=50`、沒有明確帶 `day_range` 等）抓的，每款 50 篇；實測新舊參數選到的評論相同，只差篇數。下次重抓就會變成 40 篇。
 
 | appid | 遊戲 | 涵蓋情境 |
 |---|---|---|

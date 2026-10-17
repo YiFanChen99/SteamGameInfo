@@ -4,7 +4,7 @@
 [`test/__snapshots__/payloads.md`](test/__snapshots__/payloads.md) 的 diff 跟表一致。
 
 - 程式一律用**標題名稱**找欄位（第 1 列），欄字母只供對照，欄位被搬動也不影響。
-- 「Steam 來源」都是重新抓的 `?l=tchinese&cc=tw` 商店頁與全語言 appreviews（50 篇，依有幫助程度），不受目前頁面語言影響。SteamDB 區塊只在 Steam 商店頁讀得到。
+- 「Steam 來源」都是重新抓的 `?l=tchinese&cc=tw` 商店頁與全語言 appreviews（40 篇，近 30 天內依有幫助程度），不受目前頁面語言影響。SteamDB 區塊只在 Steam 商店頁讀得到。
 
 ## 修改機制
 
