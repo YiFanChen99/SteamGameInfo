@@ -10,7 +10,7 @@
 
 import pkg from '../package.json' with { type: 'json' };
 
-const pagesBaseUrl = 'https://yifanchen99.github.io/tampermonkey--steamgifts-annotator';
+const pagesBaseUrl = 'https://yifanchen99.github.io/game-watchlist-keeper/steamgifts';
 
 /** Repeated keys (`match`, `connect`) are expressed as arrays. */
 export const metadata = {
