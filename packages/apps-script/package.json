@@ -1,0 +1,7 @@
+{
+  "name": "@watchlist/apps-script",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Apps Script web app that queries and writes the watchlist sheet",
+  "license": "MIT"
+}

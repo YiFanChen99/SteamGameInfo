@@ -1,0 +1,8 @@
+{
+  "name": "@watchlist/price-lookup",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Game id / name to price info (historical low, expected price), independent of any page",
+  "license": "MIT",
+  "type": "module"
+}
