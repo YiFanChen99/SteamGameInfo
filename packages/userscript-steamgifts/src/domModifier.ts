@@ -33,6 +33,14 @@ class HeaderDisplayFormatter {
     }
 }
 
+/**
+ * Whether ↻ may refresh this game's row: not when its 購買/期待度 is 4 or 5. A defence for now,
+ * because 目前評價 cannot be updated yet.
+ */
+function isRefreshable(game: SheetGame): boolean {
+    return !['4', '5'].includes(String(game.K).trim());
+}
+
 /** The span holding a header's annotation, so it can be replaced. */
 const annotationClass = 'ekko-annotation';
 
@@ -78,7 +86,8 @@ export class HeaderModifier {
      * Running it again replaces the annotation, e.g. after a refresh changed the update date.
      *
      * A year mark gets a ↻ inside it, e.g. `(W4) (Y19↻)`, when the giveaway's Steam link has an
-     * app id (a bundle's `sub/` link has none). The refresh drops the mark, and the ↻ with it.
+     * app id (a bundle's `sub/` link has none) and no matched game has 購買/期待度 4 or 5. The
+     * refresh drops the mark, and the ↻ with it.
      * @returns Whether modified successfully
      */
     private modify(headerElement: HTMLElement | null): boolean {
@@ -104,7 +113,9 @@ export class HeaderModifier {
             annotation.className = annotationClass;
             pointElement.append(annotation);
         }
-        const refresh = year ? this.refreshButtonFor(headerElement, annotation) : undefined;
+        const refresh = year && games.every(isRefreshable)
+            ? this.refreshButtonFor(headerElement, annotation)
+            : undefined;
         annotation.replaceChildren(
             ` (${want})`,
             ...(year ? [` (${year}`, ...(refresh ? [refresh.button] : []), ')'] : []),
