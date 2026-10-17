@@ -23,7 +23,7 @@ library 不直接呼叫 `GM_xmlhttpRequest`，網路請求由 userscript 注入�
 
 ```sh
 pnpm install
-pnpm -r check   # tsc --noEmit + ESLint
+pnpm check      # 各 package 的 tsc --noEmit + ESLint，加上根目錄腳本的 ESLint
 pnpm -r test    # vitest
 pnpm -r build   # 產出各 userscript 的 dist/
 ```
