@@ -1,4 +1,4 @@
-# Tampermonkey: Ekko Steam Sheet Writer
+# Ekko Steam Sheet Writer
 
 ## Features
 

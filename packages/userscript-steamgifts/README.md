@@ -1,4 +1,4 @@
-# Tampermonkey: Ekko SteamGifts Annotator
+# Ekko SteamGifts Annotator
 
 ## Features
 
