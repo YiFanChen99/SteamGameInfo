@@ -17,11 +17,8 @@ export const Column = {
     mode: '模式',
     /** Space-separated tags: the language mark, `Demo`, and any hand-written ones. */
     special: '特',
-    /**
-     * `[<date>EA。]中位<n>H，3rd.高<n>H。` plus any hand-written notes.
-     * TODO: placeholder header name; the real one is not confirmed yet.
-     */
-    detail: '細節',
+    /** `[<date>EA。]中位<n>H，3rd.高<n>H。` plus any hand-written notes. */
+    detail: '備註',
 } as const;
 
 export type ColumnName = (typeof Column)[keyof typeof Column];
