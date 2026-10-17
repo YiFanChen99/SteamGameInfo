@@ -72,6 +72,25 @@ importers:
 
   packages/userscript-sheet: {}
 
+  packages/userscript-steam:
+    dependencies:
+      '@watchlist/core':
+        specifier: workspace:*
+        version: link:../core
+      '@watchlist/game-refresh':
+        specifier: workspace:*
+        version: link:../game-refresh
+      '@watchlist/sheet-api':
+        specifier: workspace:*
+        version: link:../sheet-api
+    devDependencies:
+      '@types/tampermonkey':
+        specifier: ^5.0.4
+        version: 5.5.0
+      esbuild:
+        specifier: ^0.25.0
+        version: 0.25.12
+
   packages/userscript-steamgifts:
     dependencies:
       '@watchlist/core':

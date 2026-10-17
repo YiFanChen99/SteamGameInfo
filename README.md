@@ -13,6 +13,7 @@ pnpm workspace monorepo，每個 `packages/*` 都是獨立的 node module，以 
 | `game-refresh` | library | 抓 Steam → 與舊值整合 → 寫回 Sheet 的流程 |
 | `price-lookup` | library | 遊戲 id / 名稱 → 價格資訊 |
 | `apps-script` | Apps Script | Sheet 查詢 / 寫入的 Web App 原始碼 |
+| `userscript-steam` | userscript | Steam 商店頁：把遊戲新增到 Sheet，或更新它那一列 |
 | `userscript-steamgifts` | userscript | SteamGifts：想要程度標註、區域限制計數、資料刷新 |
 | `userscript-gmail` | userscript | Gmail：ITAD 通知的價格查詢面板 |
 | `userscript-sheet` | userscript | Google Sheet：資料刷新備援 |

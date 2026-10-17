@@ -52,6 +52,11 @@ export interface RefreshDeps {
     parseHtml?: ParseHtml;
     /** Defaults to the current time; decides the update date. */
     now?: () => Date;
+    /**
+     * Text of the SteamDB extension's price block (`steamDbPricesSelector`), where the page has one.
+     * Refresh: null or absent leaves 最低off alone. Add: null writes `-`.
+     */
+    steamDbText?: string | null;
 }
 
 const parseWithDomParser: ParseHtml = html => new DOMParser().parseFromString(html, 'text/html');
@@ -86,14 +91,10 @@ export async function refreshGame(appId: number, deps: RefreshDeps): Promise<Ref
         fetchSteamSnapshot(appId, deps.fetchText, deps.parseHtml),
         deps.store.read(appId, refreshReadColumns),
     ]);
-    const plan = planRefresh(snapshot, oldRow, deps.now?.() ?? new Date());
+    const lowestOff = deps.steamDbText == null ? null : parseLowestOff(deps.steamDbText, snapshot.page.originalPrice);
+    const plan = planRefresh(snapshot, oldRow, deps.now?.() ?? new Date(), { lowestOff });
     await deps.store.write(appId, plan.updates);
     return plan;
-}
-
-export interface AddDeps extends RefreshDeps {
-    /** Text of the SteamDB extension's price block (`steamDbPricesSelector`), or null without one. */
-    steamDbText: string | null;
 }
 
 /**
@@ -101,12 +102,12 @@ export interface AddDeps extends RefreshDeps {
  *
  * @returns The written cells.
  */
-export async function addGame(appId: number, deps: AddDeps): Promise<SheetRowValues> {
+export async function addGame(appId: number, deps: RefreshDeps): Promise<SheetRowValues> {
     const snapshot = await fetchSteamSnapshot(appId, deps.fetchText, deps.parseHtml);
     const row = planNewRow({
         appId,
         snapshot,
-        lowestOff: parseLowestOff(deps.steamDbText, snapshot.page.originalPrice),
+        lowestOff: parseLowestOff(deps.steamDbText ?? null, snapshot.page.originalPrice),
         today: deps.now?.() ?? new Date(),
     });
     await deps.store.append(appId, row);
