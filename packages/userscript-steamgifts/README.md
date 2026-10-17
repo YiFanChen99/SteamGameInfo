@@ -26,15 +26,17 @@
 
 ### Build & Deploy
 
-原始碼是 TypeScript，`npm run build` 用 esbuild 打包成單一支 `dist/Script.user.js`（不壓縮，因為使用者會在 Tampermonkey 裡直接讀到它）。
+原始碼是 TypeScript，`pnpm build` 用 esbuild 打包成單一支 `dist/Script.user.js`（不壓縮，因為使用者會在 Tampermonkey 裡直接讀到它）。
+
+本 package 位於 `game-watchlist-keeper` monorepo 的 `packages/userscript-steamgifts`，在 monorepo 根目錄執行：
 
 ```sh
-npm install
-npm run check      # tsc --noEmit + ESLint
-npm run build      # 產出 dist/Script.user.js
+pnpm install
+pnpm --filter @watchlist/userscript-steamgifts check   # tsc --noEmit + ESLint
+pnpm --filter @watchlist/userscript-steamgifts build   # 產出 dist/Script.user.js
 ```
 
-`dist/` 不進版控。push 到 `main` 後由 `.github/workflows/deploy.yml` 建置並發佈到 GitHub Pages，安裝網址即上方那一個。
+`dist/` 不進版控。push 到 `main` 後由 monorepo 根目錄的 `.github/workflows/pages.yml` 建置並發佈到 GitHub Pages。在切換日之前，安裝網址仍是上方原 repo 的 Pages。
 
 metadata block 的唯一來源是 `scripts/metadata.mjs`，build 時產生。省略 `@updateURL`，讓 Tampermonkey 直接用 `@downloadURL` 做更新檢查，所以不需要額外維護 `.meta.js`。
 

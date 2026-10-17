@@ -1,5 +1,5 @@
 {
-  "name": "tampermonkey--steamgifts-annotator",
+  "name": "@watchlist/userscript-steamgifts",
   "version": "2.0.1",
   "private": true,
   "description": "Annotate SteamGifts giveaways with wishlist rating (from Google Sheet) and region-restriction count",
@@ -9,7 +9,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "lint": "eslint .",
-    "check": "tsc --noEmit && npm run lint"
+    "check": "tsc --noEmit && pnpm run lint"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -19,8 +19,5 @@
     "globals": "^17.10.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.67.0"
-  },
-  "allowScripts": {
-    "esbuild@0.25.12": true
   }
 }
