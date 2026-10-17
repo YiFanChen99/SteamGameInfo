@@ -1,22 +1,30 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { createSheetApi } from '../src';
+import { createSheetApi, SheetApiUnauthorizedError } from '../src';
 
 const webAppUrl = 'https://script.google.com/macros/s/xxx/exec';
+const token = 'a b&c';
 
 describe('createSheetApi().fetchDump', () => {
-    it('GETs the web app URL and returns its games', async () => {
+    it('GETs the web app URL with the encoded token and returns its games', async () => {
         const fetchText = vi.fn(() => Promise.resolve('{"games":[{"B":"Hades","K":3}],"labelMap":{"K":"想要"}}'));
 
-        const dump = await createSheetApi({ webAppUrl, fetchText }).fetchDump();
+        const dump = await createSheetApi({ webAppUrl, token, fetchText }).fetchDump();
 
-        expect(fetchText).toHaveBeenCalledWith(webAppUrl);
+        expect(fetchText).toHaveBeenCalledWith(`${webAppUrl}?token=a%20b%26c`);
         expect(dump).toEqual({ games: [{ B: 'Hades', K: 3 }], labelMap: { K: '想要' } });
     });
 
-    it('rejects a response without games, e.g. a Google login page', async () => {
+    it('throws SheetApiUnauthorizedError when the web app rejects the token', async () => {
+        const fetchText = () => Promise.resolve('{"error":"unauthorized"}');
+
+        await expect(createSheetApi({ webAppUrl, token, fetchText }).fetchDump())
+            .rejects.toBeInstanceOf(SheetApiUnauthorizedError);
+    });
+
+    it('rejects any other response without games', async () => {
         const fetchText = () => Promise.resolve('{"error":"login"}');
 
-        await expect(createSheetApi({ webAppUrl, fetchText }).fetchDump()).rejects.toThrow('no games');
+        await expect(createSheetApi({ webAppUrl, token, fetchText }).fetchDump()).rejects.toThrow('no games');
     });
 });
