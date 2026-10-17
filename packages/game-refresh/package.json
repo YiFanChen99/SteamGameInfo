@@ -1,0 +1,18 @@
+{
+  "name": "@watchlist/game-refresh",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Fetch a game's latest Steam data, merge it with its sheet row and write it back",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit && eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@watchlist/core": "workspace:*"
+  }
+}

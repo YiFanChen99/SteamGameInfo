@@ -30,6 +30,28 @@ importers:
         specifier: 5.0.3
         version: 5.0.3(@types/node@26.6.5)(happy-dom@20.14.5)(vite@8.3.4(@types/node@26.6.5))
 
+  packages/apps-script: {}
+
+  packages/core: {}
+
+  packages/game-refresh:
+    dependencies:
+      '@watchlist/core':
+        specifier: workspace:*
+        version: link:../core
+
+  packages/price-lookup: {}
+
+  packages/sheet-api:
+    dependencies:
+      '@watchlist/core':
+        specifier: workspace:*
+        version: link:../core
+
+  packages/userscript-gmail: {}
+
+  packages/userscript-sheet: {}
+
   packages/userscript-steamgifts:
     devDependencies:
       '@eslint/js':

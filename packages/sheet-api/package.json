@@ -1,0 +1,18 @@
+{
+  "name": "@watchlist/sheet-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Client for the Apps Script web app that reads and writes the watchlist sheet",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit && eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@watchlist/core": "workspace:*"
+  }
+}
