@@ -46,7 +46,7 @@ const isSheetError = (error: unknown, code: SheetApiError['code']) =>
 function main(): void {
     const appId = extractAppId(window.location.pathname);
     if (appId === null) {
-        console.warn(`Steam Watchlist: no app id in ${window.location.pathname}`);
+        console.warn(`Steam Sheet Writer: no app id in ${window.location.pathname}`);
         return;
     }
 
@@ -108,7 +108,7 @@ function main(): void {
         try {
             await { check, add, update }[current]();
         } catch (error) {
-            console.error('Steam Watchlist:', error);
+            console.error('Steam Sheet Writer:', error);
             action = current;
             panel.setState({ kind: 'error' }, error instanceof Error ? error.message : String(error));
         }

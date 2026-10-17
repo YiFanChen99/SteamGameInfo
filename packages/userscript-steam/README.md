@@ -1,4 +1,4 @@
-# Tampermonkey: Ekko Steam Watchlist
+# Tampermonkey: Ekko Steam Sheet Writer
 
 ## Features
 

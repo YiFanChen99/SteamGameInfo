@@ -31,7 +31,7 @@ export class Panel {
 
     constructor(onClick: () => void) {
         const area = document.createElement('div');
-        area.id = 'EkkoSteamWatchlist';
+        area.id = 'EkkoSteamSheetWriter';
         Object.assign(area.style, {
             position: 'fixed', right: '25px', top: '20px', zIndex: '50',
             display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px',

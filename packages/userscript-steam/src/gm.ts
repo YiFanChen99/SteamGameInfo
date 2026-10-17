@@ -34,7 +34,7 @@ export function getToken(): string | null {
     if (saved) {
         return saved;
     }
-    const entered = window.prompt('Steam Watchlist: 請輸入 Sheet API 的 token（Apps Script 的 API_TOKEN）')?.trim();
+    const entered = window.prompt('Steam Sheet Writer: 請輸入 Sheet API 的 token（Apps Script 的 API_TOKEN）')?.trim();
     if (!entered) {
         return null;
     }

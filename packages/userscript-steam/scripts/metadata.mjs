@@ -14,7 +14,7 @@ const pagesBaseUrl = 'https://yifanchen99.github.io/game-watchlist-keeper/steam'
 
 /** Repeated keys (`match`, `connect`) are expressed as arrays. */
 export const metadata = {
-    name: 'Ekko Steam Watchlist',
+    name: 'Ekko Steam Sheet Writer',
     namespace: 'https://github.com/YiFanChen99/game-watchlist-keeper',
     version: pkg.version,
     description: pkg.description,
