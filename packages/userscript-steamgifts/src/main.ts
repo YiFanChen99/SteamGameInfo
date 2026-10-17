@@ -10,7 +10,7 @@ import { getOrFetchData } from './sheetFetcher';
  */
 async function main(): Promise<void> {
     const sheetData = await getOrFetchData();
-    console.log('SG-Annotator: updated');
+    console.log('SteamGifts Annotator: updated');
 
     const pathname = window.location.pathname;
     let isGiveawaysPage: boolean;
@@ -19,7 +19,7 @@ async function main(): Promise<void> {
     } else if (pathname.startsWith('/giveaway/')) {
         isGiveawaysPage = false;
     } else {
-        console.warn(`SG-Annotator: No modification applied. (Unknown page: ${pathname})`);
+        console.warn(`SteamGifts Annotator: No modification applied. (Unknown page: ${pathname})`);
         return;
     }
 
@@ -27,17 +27,17 @@ async function main(): Promise<void> {
     const regionModifier = new RegionModifier();
     if (isGiveawaysPage) {
         const count = headerModifier.modifyGiveaways();
-        console.log(`SG-Annotator: \`giveaways\` ${count} headers modified`);
+        console.log(`SteamGifts Annotator: \`giveaways\` ${count} headers modified`);
         const regionCount = await regionModifier.modifyGiveaways();
-        console.log(`SG-Annotator: \`giveaways\` ${regionCount} region tags modified`);
+        console.log(`SteamGifts Annotator: \`giveaways\` ${regionCount} region tags modified`);
     } else {
         const done = headerModifier.modifyGiveaway();
-        console.log(`SG-Annotator: \`giveaway\` ${done ? 'headers modified' : 'No headers modification applied.'}`);
+        console.log(`SteamGifts Annotator: \`giveaway\` ${done ? 'headers modified' : 'No headers modification applied.'}`);
         const regionDone = await regionModifier.modifyGiveaway();
-        console.log(`SG-Annotator: \`giveaway\` ${regionDone ? 'region tags modified' : 'No region tags modification applied.'}`);
+        console.log(`SteamGifts Annotator: \`giveaway\` ${regionDone ? 'region tags modified' : 'No region tags modification applied.'}`);
     }
 }
 
 main().catch((error: unknown) => {
-    console.error('SG-Annotator:', error);
+    console.error('SteamGifts Annotator:', error);
 });

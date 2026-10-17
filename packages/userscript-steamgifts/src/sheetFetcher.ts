@@ -33,7 +33,7 @@ function getToken(): string | null {
     if (saved) {
         return saved;
     }
-    const entered = window.prompt('SG-Annotator: 請輸入 Sheet API 的 token（Apps Script 的 API_TOKEN）')?.trim();
+    const entered = window.prompt('SteamGifts Annotator: 請輸入 Sheet API 的 token（Apps Script 的 API_TOKEN）')?.trim();
     if (!entered) {
         return null;
     }
@@ -42,12 +42,12 @@ function getToken(): string | null {
 }
 
 async function fetchData(): Promise<SheetData> {
-    console.log('SG-Annotator: fetchData starting ...');
+    console.log('SteamGifts Annotator: fetchData starting ...');
     // A rejected token is forgotten and asked for once more.
     for (let attempt = 1; ; attempt++) {
         const token = getToken();
         if (!token) {
-            throw new Error('SG-Annotator: no Sheet API token');
+            throw new Error('SteamGifts Annotator: no Sheet API token');
         }
         try {
             const dump = await createSheetApi({ webAppUrl: deployedWebAppUrl, token, fetchText }).fetchDump();
