@@ -15,9 +15,14 @@ export function loadStorePage(appId: number): Document {
     return new DOMParser().parseFromString(loadStorePageHtml(appId), 'text/html');
 }
 
-/** A saved, trimmed `/appreviews` response body. */
+/** A saved, trimmed `/appreviews` response body with the playtime sample. */
 export function loadAppReviewsJson(appId: number): string {
     return readFileSync(join(dir, 'appreviews', `${appId}.json`), 'utf8');
+}
+
+/** A saved `reviewSummaryUrl` response body: counts only. */
+export function loadReviewSummaryJson(appId: number): string {
+    return readFileSync(join(dir, 'reviewsummary', `${appId}.json`), 'utf8');
 }
 
 /**
@@ -27,7 +32,8 @@ export function loadAppReviewsJson(appId: number): string {
 export const fixtureFetchText: FetchText = (url) => {
     const appId = Number(/\/(?:app|appreviews)\/(\d+)/.exec(url)?.[1]);
     if (url.startsWith('https://store.steampowered.com/appreviews/')) {
-        return Promise.resolve(loadAppReviewsJson(appId));
+        const isSummary = new URL(url).searchParams.get('num_per_page') === '0';
+        return Promise.resolve(isSummary ? loadReviewSummaryJson(appId) : loadAppReviewsJson(appId));
     }
     if (url.startsWith('https://store.steampowered.com/app/')) {
         return Promise.resolve(loadStorePageHtml(appId));

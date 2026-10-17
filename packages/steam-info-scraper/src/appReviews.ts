@@ -13,27 +13,37 @@ export interface AppReviewsResponse {
     }[];
 }
 
-export interface AppReviewsInfo {
-    /** Positive reviews, all languages. */
+/** The review counts the store page shows as 「所有評論」. */
+export interface ReviewSummary {
     totalPositive: number;
-    /** All reviews, all languages. */
     totalReviews: number;
-    /** Each fetched reviewer's total playtime, in minutes. */
+}
+
+export interface AppReviewsInfo extends ReviewSummary {
+    /** Each sampled reviewer's total playtime, in minutes. */
     playtimeMinutes: number[];
 }
 
-/**
- * @param json Body of `appReviewsUrl(appId)`.
- */
-export function parseAppReviews(json: string): AppReviewsInfo {
+function parseResponse(json: string): AppReviewsResponse {
     const data = JSON.parse(json) as AppReviewsResponse;
     if (data.success !== 1) {
         throw new Error(`appreviews failed: success=${data.success}`);
     }
+    return data;
+}
 
-    return {
-        totalPositive: data.query_summary.total_positive,
-        totalReviews: data.query_summary.total_reviews,
-        playtimeMinutes: data.reviews.map(review => review.author.playtime_forever),
-    };
+/**
+ * @param json Body of `reviewSummaryUrl(appId, ...)`.
+ */
+export function parseReviewSummary(json: string): ReviewSummary {
+    const { query_summary: summary } = parseResponse(json);
+    return { totalPositive: summary.total_positive, totalReviews: summary.total_reviews };
+}
+
+/**
+ * @param json Body of `appReviewsUrl(appId, ...)`.
+ * @returns Each fetched reviewer's total playtime, in minutes.
+ */
+export function parseReviewSample(json: string): number[] {
+    return parseResponse(json).reviews.map(review => review.author.playtime_forever);
 }

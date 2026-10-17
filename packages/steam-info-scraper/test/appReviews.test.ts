@@ -1,27 +1,35 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseAppReviews } from '../src';
-import { loadAppReviewsJson } from './fixtures';
+import { parseReviewSample, parseReviewSummary } from '../src';
+import { loadAppReviewsJson, loadReviewSummaryJson } from './fixtures';
 
-describe('parseAppReviews', () => {
-    it('reads the all-language review counts and each reviewer playtime', () => {
-        const info = parseAppReviews(loadAppReviewsJson(1145360));
-
-        expect(info.totalPositive).toBe(303821);
-        expect(info.totalReviews).toBe(310049);
-        expect(info.playtimeMinutes).toHaveLength(50);
-        expect(info.playtimeMinutes.every(minutes => Number.isInteger(minutes) && minutes >= 0)).toBe(true);
+describe('parseReviewSummary', () => {
+    it('reads the 所有評論 counts', () => {
+        expect(parseReviewSummary(loadReviewSummaryJson(1145360))).toEqual({ totalPositive: 281300, totalReviews: 287080 });
     });
 
     it('reads a game without reviews', () => {
-        expect(parseAppReviews(loadAppReviewsJson(3669620))).toEqual({
-            totalPositive: 0,
-            totalReviews: 0,
-            playtimeMinutes: [],
-        });
+        expect(parseReviewSummary(loadReviewSummaryJson(3669620))).toEqual({ totalPositive: 0, totalReviews: 0 });
     });
 
     it('throws when Steam reports failure', () => {
-        expect(() => parseAppReviews('{"success":2}')).toThrow('success=2');
+        expect(() => parseReviewSummary('{"success":2}')).toThrow('success=2');
+    });
+});
+
+describe('parseReviewSample', () => {
+    it('reads each reviewer playtime', () => {
+        const minutes = parseReviewSample(loadAppReviewsJson(1145360));
+
+        expect(minutes).toHaveLength(50);
+        expect(minutes.every(value => Number.isInteger(value) && value >= 0)).toBe(true);
+    });
+
+    it('reads a game without reviews', () => {
+        expect(parseReviewSample(loadAppReviewsJson(3669620))).toEqual([]);
+    });
+
+    it('throws when Steam reports failure', () => {
+        expect(() => parseReviewSample('{"success":2}')).toThrow('success=2');
     });
 });

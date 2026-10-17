@@ -63,9 +63,12 @@ export interface RefreshOptions {
 
 const msPerDay = 24 * 60 * 60 * 1000;
 
-/** 評價度: the all-language positive share, 0–100 rounded; `null` without reviews. */
+/**
+ * 評價度: the store page's 「所有評論」 percent, 0–100 rounded down as Steam shows it
+ * (97.99% is 97); `null` without reviews.
+ */
 export function reviewScore({ totalPositive, totalReviews }: AppReviewsInfo): number | null {
-    return totalReviews > 0 ? Math.round((totalPositive / totalReviews) * 100) : null;
+    return totalReviews > 0 ? Math.floor((totalPositive / totalReviews) * 100) : null;
 }
 
 function isBlank(value: CellValue | undefined): value is undefined {

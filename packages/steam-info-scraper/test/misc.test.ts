@@ -6,9 +6,10 @@ import {
     parseReleaseDate,
     parseSteamDbPrices,
     readSteamDbPrices,
+    reviewSummaryUrl,
     storePageFetchUrl,
 } from '../src';
-import { loadAppReviewsJson, loadStorePageHtml } from './fixtures';
+import { loadAppReviewsJson, loadReviewSummaryJson, loadStorePageHtml } from './fixtures';
 
 describe('parseReleaseDate', () => {
     it.each([
@@ -45,16 +46,37 @@ describe('SteamDB block', () => {
 });
 
 describe('fetchSteamSnapshot', () => {
-    it('fetches the tchinese TW store page and all-language reviews', async () => {
-        const fetchText = vi.fn((url: string) => Promise.resolve(
-            url.includes('/appreviews/') ? loadAppReviewsJson(2868840) : loadStorePageHtml(2868840),
-        ));
+    /** Serves `appId`'s fixtures. */
+    function fakeFetch(appId: number) {
+        return vi.fn((url: string) => {
+            if (!url.includes('/appreviews/')) return Promise.resolve(loadStorePageHtml(appId));
+            if (new URL(url).searchParams.get('num_per_page') === '0') return Promise.resolve(loadReviewSummaryJson(appId));
+            return Promise.resolve(loadAppReviewsJson(appId));
+        });
+    }
+    const urls = (fetchText: ReturnType<typeof fakeFetch>) => fetchText.mock.calls.map(([url]) => url).sort();
+
+    it("fetches the tchinese TW store page, the Steam purchasers' counts and a 30-day sample", async () => {
+        const fetchText = fakeFetch(2868840);
 
         const snapshot = await fetchSteamSnapshot(2868840, fetchText);
 
-        expect(fetchText.mock.calls.map(([url]) => url).sort()).toEqual([appReviewsUrl(2868840), storePageFetchUrl(2868840)].sort());
+        expect(urls(fetchText)).toEqual(
+            [appReviewsUrl(2868840), reviewSummaryUrl(2868840, 'steam'), storePageFetchUrl(2868840)].sort(),
+        );
         expect(storePageFetchUrl(570)).toBe('https://store.steampowered.com/app/570/?l=tchinese&cc=tw');
+        expect(appReviewsUrl(570)).toContain('day_range=30&');
         expect(snapshot.page).toMatchObject({ name: 'Slay the Spire 2', originalPrice: 499, isEarlyAccess: true });
+        expect(snapshot.reviews).toMatchObject({ totalPositive: 114861, totalReviews: 186485 });
         expect(snapshot.reviews.playtimeMinutes).toHaveLength(50);
+    });
+
+    it('counts every purchase type for a free game', async () => {
+        const fetchText = fakeFetch(570);
+
+        const snapshot = await fetchSteamSnapshot(570, fetchText);
+
+        expect(urls(fetchText)).toContain(reviewSummaryUrl(570, 'all'));
+        expect(snapshot.reviews).toMatchObject({ totalPositive: 2251569, totalReviews: 2799392 });
     });
 });
