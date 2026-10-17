@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     findAppendRow,
-    findAppIdRow,
+    indexAppIds,
     indexHeader,
     pickValues,
     planAppend,
@@ -34,16 +34,15 @@ describe('indexHeader', () => {
     });
 });
 
-describe('findAppIdRow', () => {
-    it('returns the 1-based row of the first name linking the app id', () => {
+describe('indexAppIds', () => {
+    it('maps each linked app id to its first 1-based row', () => {
         const links = [
+            '=HYPERLINK("https://store.steampowered.com/app/570/","Dota 2")',
             '',
             '=HYPERLINK("https://store.steampowered.com/app/5700/","Not Dota")',
-            'https://store.steampowered.com/app/570/Dota_2/',
-            '=HYPERLINK("https://store.steampowered.com/app/570/","Dota 2")',
+            '=HYPERLINK("https://store.steampowered.com/app/570/","Dota 2 again")',
         ];
-        expect(findAppIdRow(links, 570)).toBe(4);
-        expect(findAppIdRow(links, 1)).toBeNull();
+        expect(indexAppIds(links)).toEqual({ 570: 2, 5700: 4 });
     });
 });
 

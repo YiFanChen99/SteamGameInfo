@@ -2,6 +2,7 @@
  * Entry points. scripts/build.mjs declares a global function for each export here,
  * because Apps Script only finds top-level function declarations.
  */
+import { extractAppId } from '@watchlist/core';
 import { Column } from '@watchlist/game-record-writer';
 import {
     rowAction,
@@ -17,21 +18,22 @@ import { buildDump, firstColumn, lastColumn, worksheetName, type CellValue } fro
 import {
     columnIndex,
     findAppendRow,
-    findAppIdRow,
     firstDataRow,
     headerRow,
+    indexAppIds,
     indexHeader,
     pickValues,
     planAppend,
     planUpdate,
     RequestError,
+    type AppIdIndex,
     type CellWrite,
 } from './rows';
 
 /** Script property holding the shared token. Set it in Project Settings → Script Properties. */
 const tokenProperty = 'API_TOKEN';
 
-function dumpCache(): ChunkedCache {
+function gzipCache(key: string): ChunkedCache {
     return createChunkedCache({
         store: CacheService.getScriptCache(),
         codec: {
@@ -40,11 +42,17 @@ function dumpCache(): ChunkedCache {
                 Utilities.newBlob(Utilities.base64Decode(stored), 'application/x-gzip'),
             ).getDataAsString(),
         },
-        key: 'dump:v1',
+        key,
         chunkChars: 90_000,
         expirationInSeconds: 6 * 60 * 60,
     });
 }
+
+/** The whole-sheet dump the annotator reads. */
+const dumpCache = () => gzipCache('dump:v1');
+
+/** `AppIdIndex` of the name column, so a lookup need not read every name. */
+const appIdIndexCache = () => gzipCache('appIds:v1');
 
 /** Fails closed: an unset token property rejects every request. */
 export function isAuthorized(provided: string | undefined, expected: string | null): boolean {
@@ -92,15 +100,40 @@ function nameRange({ sheet, nameColumn }: SheetContext): GoogleAppsScript.Spread
 }
 
 /**
- * The row whose name's HYPERLINK formula links `appId`. Names are always HYPERLINK formulas,
- * never inserted links, so the formulas are the only thing read.
+ * Read every name's HYPERLINK formula and cache the resulting index. Names are always
+ * HYPERLINK formulas, never inserted links, so the formulas are the only thing read.
+ */
+function scanAppIds(context: SheetContext): AppIdIndex {
+    const range = nameRange(context);
+    const index = range ? indexAppIds(range.getFormulas().map(cells => String(cells[0] ?? ''))) : {};
+    appIdIndexCache().put(JSON.stringify(index));
+    return index;
+}
+
+/** The row whose name links `appId`, read from the sheet itself. */
+function scanRow(context: SheetContext, appId: number): number | null {
+    return scanAppIds(context)[appId] ?? null;
+}
+
+/**
+ * The row whose name links `appId`, through the cached index when there is one.
+ *
+ * A cached row is checked against its name formula before use, since rows inserted or
+ * deleted by hand do not fire onEdit; a mismatch rescans. An app id missing from the
+ * cache is taken as absent: rows are added by hand edits (which clear the cache) or by
+ * `append` (which updates it).
  */
 function findRow(context: SheetContext, appId: number): number | null {
-    const range = nameRange(context);
-    if (!range) {
+    const cached = appIdIndexCache().get();
+    if (cached === null) {
+        return scanRow(context, appId);
+    }
+    const row = (JSON.parse(cached) as AppIdIndex)[appId];
+    if (row === undefined) {
         return null;
     }
-    return findAppIdRow(range.getFormulas().map(cells => String(cells[0] ?? '')), appId);
+    const formula = context.sheet.getRange(row, context.nameColumn + 1).getFormula();
+    return extractAppId(formula) === appId ? row : scanRow(context, appId);
 }
 
 function requireRow(context: SheetContext, appId: number): number {
@@ -171,8 +204,10 @@ function writeRow(request: WriteRequest): WriteResponse {
             const rowFormulas = sheet.getRange(row, 1, 1, lastColumn).getFormulas()[0] ?? [];
             applyWrites(sheet, row, planUpdate(context.columns, request.values, rowFormulas));
         } else {
-            const existing = findRow(context, request.appId);
-            if (existing !== null) {
+            // Never trust the cache here: a missed duplicate would add the game twice.
+            const index = scanAppIds(context);
+            const existing = index[request.appId];
+            if (existing !== undefined) {
                 throw new RequestError('duplicate', `row ${existing} already links app ${request.appId}`);
             }
             const names = nameRange(context)?.getValues().map(cells => cells[0] as CellValue) ?? [];
@@ -180,6 +215,7 @@ function writeRow(request: WriteRequest): WriteResponse {
             const template = (sheet.getRange(row - 1, 1, 1, lastColumn).getFormulasR1C1()[0] ?? [])
                 .map(formula => formula ?? '');
             applyWrites(sheet, row, planAppend(context.columns, request.values, template));
+            appIdIndexCache().put(JSON.stringify({ ...index, [request.appId]: row }));
         }
         SpreadsheetApp.flush();
         // Script edits do not fire onEdit.
@@ -235,9 +271,22 @@ export function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
     }
 }
 
-/** Simple trigger: any hand edit may change the dump. Edits made by scripts do not fire it. */
-export function onEdit(): void {
+function invalidateCaches(): void {
     dumpCache().invalidate();
+    appIdIndexCache().invalidate();
+}
+
+/** Simple trigger: any hand edit may change the dump and the index. Edits made by scripts do not fire it. */
+export function onEdit(): void {
+    invalidateCaches();
+}
+
+/**
+ * Installable trigger (set it up once: editor → 觸發條件 → onChange, 試算表, 變更時): inserting,
+ * deleting or sorting rows by hand moves rows without firing onEdit.
+ */
+export function onChange(): void {
+    invalidateCaches();
 }
 
 /**

@@ -47,13 +47,22 @@ export function columnIndex(columns: ReadonlyMap<string, number>, name: string):
     return index;
 }
 
+/** 1-based row by app id, as JSON keys are strings. */
+export type AppIdIndex = Record<string, number>;
+
 /**
  * @param links One entry per name cell from `firstDataRow` down: its formula.
- * @returns The 1-based row of the first cell linking `appId`, or null.
+ * @returns Each linked app id's row; when several rows link one app id, the first wins.
  */
-export function findAppIdRow(links: readonly string[], appId: number): number | null {
-    const index = links.findIndex(link => extractAppId(link) === appId);
-    return index < 0 ? null : index + firstDataRow;
+export function indexAppIds(links: readonly string[]): AppIdIndex {
+    const index: AppIdIndex = {};
+    links.forEach((link, offset) => {
+        const appId = extractAppId(link);
+        if (appId !== null && !(appId in index)) {
+            index[appId] = offset + firstDataRow;
+        }
+    });
+    return index;
 }
 
 /**

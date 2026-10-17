@@ -14,7 +14,10 @@
   - `append`：先確認 Sheet 沒有這個 AppID（有的話回 `duplicate`），再寫到第 4 列起第一個名稱空白的列。上一列的公式（名稱除外）用 R1C1 複製下來，其餘寫入指定欄位。
   - 寫入期間持有 script lock，寫完清掉傾印快取。
 - 欄位一律以第 1 列的標題名稱定位。AppID 只從名稱欄的 HYPERLINK 公式找（名稱一律是 HYPERLINK，沒有用「插入連結」的格子）。
-- 傾印結果 gzip 後分塊存在 CacheService，最長 6 小時；手動編輯 Sheet 時由 `onEdit` 清掉。
+- 兩份快取都 gzip 後分塊存在 CacheService，最長 6 小時：
+  - **整表傾印**：寫入後清掉。
+  - **AppID → 列號索引**：讓單列查詢不必每次讀整個名稱欄。用到快取裡的列號前，會先讀那一格的公式確認還是同一個 AppID，不符就重新掃描，所以快取過期也不會讀錯或寫錯列。`append` 一律重新掃描來防重複，寫完把新列加進索引。
+  - 手動編輯 Sheet 時由 `onEdit` 兩份都清掉；插入、刪除、排序整列不會觸發 `onEdit`，由 `onChange` 清掉（要手動設定觸發條件，見下方）。
 - `WantToOwned`：Sheet 自訂函式，沿用原專案。
 
 部署設定在 `appsscript.json`：以部署者身分執行（`USER_DEPLOYING`）、匿名存取（`ANYONE_ANONYMOUS`），由 token 把關。
@@ -40,6 +43,12 @@ pnpm dlx @google/clasp deploy -i <deploymentId>      # 把既有部署更新到�
 ```
 
 `clasp deploy` 不帶 `-i` 會新建一個部署（新的 URL）。userscript 用的部署 URL 寫在 `packages/sheet-api/src/index.ts` 的 `deployedWebAppUrl`。
+
+### onChange 觸發條件（設定一次）
+
+`onEdit` 是簡單觸發條件，會自動執行；`onChange` 是可安裝的觸發條件，要手動新增：Apps Script 編輯器 → 左側「觸發條件」→「新增觸發條件」→ 函式選 `onChange`、事件來源選「試算表」、事件類型選「變更時」→ 儲存並授權。
+
+沒設定也不會寫錯資料（見上方的確認機制），只是插入或刪除整列之後，頁面上的按鈕最多有 6 小時可能顯示錯（例如已經刪掉的遊戲仍顯示「↻ 更新」）。
 
 ### token
 

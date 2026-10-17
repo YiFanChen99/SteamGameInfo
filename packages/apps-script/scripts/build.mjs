@@ -5,7 +5,7 @@ import * as esbuild from 'esbuild';
 const outDir = 'dist';
 const globalName = 'App';
 /** Exports of src/main.ts that Apps Script must see as global functions. */
-const entryPoints = ['doGet', 'doPost', 'onEdit', 'WantToOwned'];
+const entryPoints = ['doGet', 'doPost', 'onEdit', 'onChange', 'WantToOwned'];
 
 function sourceRevision() {
     try {
