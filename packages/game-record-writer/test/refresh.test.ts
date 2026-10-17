@@ -58,6 +58,15 @@ describe('mergeDetail (COLUMNS.md 備註：更新)', () => {
     it('appends playtime when the cell has none', () => {
         expect(mergeDetail('等正式版。', playtime)).toBe('等正式版。中位125H，3rd.高725H。');
     });
+
+    it('separates an appended playtime with 。 unless the cell ends with a full-width symbol', () => {
+        expect(mergeDetail('等正式版', playtime)).toBe('等正式版。中位125H，3rd.高725H。');
+        expect(mergeDetail('Roguelike', playtime)).toBe('Roguelike。中位125H，3rd.高725H。');
+        expect(mergeDetail('好玩!', playtime)).toBe('好玩!。中位125H，3rd.高725H。');
+        expect(mergeDetail('好玩！', playtime)).toBe('好玩！中位125H，3rd.高725H。');
+        expect(mergeDetail('（等正式版）', playtime)).toBe('（等正式版）中位125H，3rd.高725H。');
+        expect(mergeDetail('', playtime)).toBe('中位125H，3rd.高725H。');
+    });
 });
 
 describe('extractPlaytime', () => {

@@ -6,6 +6,9 @@ import type { PlaytimeStats } from './playtime';
 /** Matches what `formatPlaytime` writes, including old `NaN` values from the legacy scraper. */
 const playtimePattern = /中位[^，。]*H，3rd\.高[^。]*H。/;
 
+/** A trailing full-width symbol (CJK punctuation or a full-width ASCII symbol), e.g. `。`, `）`, `！`. */
+const endsWithFullWidthSymbol = /[\u3000-\u303F\uFF01-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65]$/;
+
 /**
  * @returns e.g. `中位12H，3rd.高85H。`; unknown numbers become `-`.
  */
@@ -45,11 +48,12 @@ export function extractPlaytime(detail: string): string | null {
 
 /**
  * Refresh only the playtime part of an existing detail cell and keep everything else.
- * Appends when there is no playtime part yet.
+ * Appends when there is no playtime part yet, after a `。` unless the old cell is empty or already
+ * ends with a full-width symbol.
  */
 export function mergeDetail(oldDetail: string, playtime: PlaytimeStats): string {
     const fresh = formatPlaytime(playtime);
     return playtimePattern.test(oldDetail)
         ? oldDetail.replace(playtimePattern, fresh)
-        : `${oldDetail}${fresh}`;
+        : `${oldDetail}${oldDetail && !endsWithFullWidthSymbol.test(oldDetail) ? '。' : ''}${fresh}`;
 }
