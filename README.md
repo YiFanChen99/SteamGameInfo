@@ -32,5 +32,5 @@ push 到 `main` 後由 `.github/workflows/pages.yml` 建置，將每支 userscri
 
 ## Legacy
 
-- `packages/core/legacy/steam_lookup.js`：舊的 Node CLI（`node steam_lookup.js "遊戲名"` → Sheet 欄位 JSON），邏輯已移植到 `core`，保留作對照。
+- `packages/core/legacy/steam_lookup.js`：舊的 Node CLI（`node packages/core/legacy/steam_lookup.js "遊戲名"` → Sheet 欄位 JSON），邏輯已移植到 `core`，保留作對照。用法與輸出欄位見 [`packages/core/legacy/README.md`](packages/core/legacy/README.md)。
 - `google_sheet_b1_d3.js`：以 Google Sheets API + OAuth token 讀取 B1:D3 的實驗腳本。**目前沒有任何 package 用到**（新架構改走 Apps Script Web App）。
