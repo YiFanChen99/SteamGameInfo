@@ -125,6 +125,20 @@ describe('planRefresh', () => {
         ]);
     });
 
+    it('writes the lowest discount only when one is given', () => {
+        expect(planRefresh(snapshot, {}, today, { lowestOff: 30 }).updates[Column.lowestOff]).toBe(30);
+        expect(planRefresh(snapshot, {}, today, { lowestOff: '-' }).updates[Column.lowestOff]).toBe('-');
+        expect(planRefresh(snapshot, {}, today, { lowestOff: null }).updates).not.toHaveProperty(Column.lowestOff);
+        expect(planRefresh(snapshot, {}, today).updates).not.toHaveProperty(Column.lowestOff);
+    });
+
+    it('replaces the unknown price placeholder without reporting a change', () => {
+        const { updates, changes } = planRefresh(snapshot, { [Column.originalPrice]: 10000 }, today);
+
+        expect(updates[Column.originalPrice]).toBe(499);
+        expect(changes).toEqual([]);
+    });
+
     it('leaves cells alone when Steam has no value', () => {
         const unreleased: SteamSnapshot = {
             page: { ...page, originalPrice: null, releaseDate: null },

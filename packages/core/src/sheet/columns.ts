@@ -14,6 +14,8 @@ export const Column = {
     updatedOn: '更新日',
     /** Computed by a sheet formula from 原價 and 最低off; never write it. */
     lowestPrice: '最低$',
+    /** 1–5, `?` for a game not rated yet, or an owned mark. */
+    wantLevel: '購買/期待度1~5',
     /** The user's own filter tag categories, derived from the store page (rules not defined yet). */
     mode: '模式',
     /** Space-separated tags: the language mark, `Demo`, and any hand-written ones. */

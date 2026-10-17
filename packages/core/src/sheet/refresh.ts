@@ -40,6 +40,20 @@ export const refreshReadColumns: readonly ColumnName[] = [
     Column.detail,
 ];
 
+/**
+ * 原價 of a new row whose store page has no price yet, e.g. not released (the legacy scraper's value).
+ * A refresh replaces it without reporting a change.
+ */
+export const unknownPricePlaceholder = 10000;
+
+export interface RefreshOptions {
+    /**
+     * From `parseLowestOff`, where the SteamDB block can be read (the Steam store page).
+     * `null` or absent leaves 最低off alone.
+     */
+    lowestOff?: number | '-' | null;
+}
+
 const msPerDay = 24 * 60 * 60 * 1000;
 
 function isBlank(value: CellValue | undefined): value is undefined {
@@ -52,7 +66,7 @@ function priceChange(oldValue: CellValue | undefined, newValue: number): ValueCh
     }
     const digits = String(oldValue).replace(/[^\d.]/g, '');
     const oldPrice = digits ? Number(digits) : NaN;
-    if (oldPrice === newValue) {
+    if (oldPrice === newValue || oldPrice === unknownPricePlaceholder) {
         return null;
     }
     const delta = Number.isFinite(oldPrice) ? Math.round((newValue - oldPrice) * 100) / 100 : null;
@@ -76,15 +90,22 @@ function releaseDateChange(oldValue: CellValue | undefined, newValue: string): V
  * Decide which cells of an existing row to write after fetching fresh Steam data.
  *
  * - Price, release date and review score are replaced when Steam has them, and left alone
- *   when it does not (e.g. no price before release). Price and date changes are reported.
+ *   when it does not (e.g. no price before release). Price and date changes are reported,
+ *   except replacing `unknownPricePlaceholder`.
+ * - The lowest discount is written only when `options.lowestOff` has one.
  * - The update date becomes `today`.
  * - The special cell gets its language mark and `Demo` tag refreshed; see `mergeSpecial`.
  * - The detail cell only gets its playtime part replaced; see `mergeDetail`.
- * - Name, lowest price/off and mode are never touched.
+ * - Name, want level and mode are never touched.
  *
  * @param oldRow The row's current values for `refreshReadColumns`.
  */
-export function planRefresh(snapshot: SteamSnapshot, oldRow: SheetRowValues, today: Date): RefreshPlan {
+export function planRefresh(
+    snapshot: SteamSnapshot,
+    oldRow: SheetRowValues,
+    today: Date,
+    options: RefreshOptions = {},
+): RefreshPlan {
     const { page, reviews, playtime } = snapshot;
     const updates: SheetRowValues = {};
     const changes: ValueChange[] = [];
@@ -93,6 +114,9 @@ export function planRefresh(snapshot: SteamSnapshot, oldRow: SheetRowValues, tod
         updates[Column.originalPrice] = page.originalPrice;
         const change = priceChange(oldRow[Column.originalPrice], page.originalPrice);
         if (change) changes.push(change);
+    }
+    if (options.lowestOff !== undefined && options.lowestOff !== null) {
+        updates[Column.lowestOff] = options.lowestOff;
     }
     if (page.releaseDate !== null) {
         updates[Column.releaseDate] = page.releaseDate;
