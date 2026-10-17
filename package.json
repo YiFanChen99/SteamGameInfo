@@ -1,0 +1,23 @@
+{
+  "name": "game-watchlist-keeper",
+  "private": true,
+  "description": "Tools that keep a Google Sheet game watchlist in sync with Steam, SteamGifts and price alerts",
+  "author": "YiFanChen99",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@10.8.0",
+  "scripts": {
+    "check": "pnpm -r check",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "globals": "^17.10.0",
+    "happy-dom": "20.14.5",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.67.0",
+    "vitest": "5.0.3"
+  }
+}

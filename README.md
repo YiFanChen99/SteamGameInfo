@@ -1,52 +1,36 @@
-# SteamGame
+# game-watchlist-keeper
 
-這支腳本會把 Steam 遊戲名稱查成適合寫入 Google Sheet 的 JSON。
+讓一份 Google Sheet 遊戲追蹤清單與 Steam、SteamGifts、ITAD 價格通知保持同步的工具集。
 
-## Usage
+pnpm workspace monorepo，每個 `packages/*` 都是獨立的 node module，以 `@watchlist/<name>` 互相引用，皆 `private`、不發佈。
 
-```bash
-node steam_lookup.js "Settlement Survival / 部落幸存者"
-node steam_lookup.js "Settlement Survival / 部落幸存者" --mode update
-node steam_lookup.js "Settlement Survival / 部落幸存者" --mode full --debug
+## Packages
+
+| package | 類型 | 說明 |
+|---|---|---|
+| `core` | library | 不做 I/O 的純函式：Steam 頁面解析、遊戲時長統計、欄名型別、名稱正規化、新舊值整合規則 |
+| `sheet-api` | library | Apps Script Web App 的 client |
+| `game-refresh` | library | 抓 Steam → 與舊值整合 → 寫回 Sheet 的流程 |
+| `price-lookup` | library | 遊戲 id / 名稱 → 價格資訊 |
+| `apps-script` | Apps Script | Sheet 查詢 / 寫入的 Web App 原始碼 |
+| `userscript-steamgifts` | userscript | SteamGifts：想要程度標註、區域限制計數、資料刷新 |
+| `userscript-gmail` | userscript | Gmail：ITAD 通知的價格查詢面板 |
+| `userscript-sheet` | userscript | Google Sheet：資料刷新備援 |
+
+library 不直接呼叫 `GM_xmlhttpRequest`，網路請求由 userscript 注入，所以 library 可以直接在 Node 上跑測試。
+
+## Development
+
+```sh
+pnpm install
+pnpm -r check   # tsc --noEmit + ESLint
+pnpm -r test    # vitest
+pnpm -r build   # 產出各 userscript 的 dist/
 ```
 
-如果你要把 `最低$` 和 `最低off` 先手動帶入，也可以加：
+push 到 `main` 後由 `.github/workflows/pages.yml` 建置，將每支 userscript 發佈到 GitHub Pages 的 `/<網站>/Script.user.js`。
 
-```bash
-node steam_lookup.js "Settlement Survival / 部落幸存者" --lowest-price 99 --lowest-off 50
-```
+## Legacy
 
-### Parameters
-
-- 沒有加 `--debug` 時，只回傳精簡結果
-- `--mode` 決定回 `full` 或 `update`
-- 預設 `--mode full`
-
-### Outputs
-
-頂層只有三個主要欄位：
-
-- `query`
-- `matched`
-- `sheet`
-
-如果加 `--debug`，才會多出 `debug`
-
-#### `sheet` 欄位
-
-`sheet` 內只保留你會填表用到的欄位：
-
-- `名稱`
-- `原價`
-- `最低off`
-- `上市日期`
-- `評價度`
-- `我更新日期`
-- `最低$`
-- `模式`
-- `特`
-
-其中：
-
-- `評價度` 會用 Steam「所有評論」的正評百分比
-- `特` 會包含是否有 `Demo` 與支援語言
+- `packages/core/legacy/steam_lookup.js`：舊的 Node CLI（`node steam_lookup.js "遊戲名"` → Sheet 欄位 JSON），邏輯已移植到 `core`，保留作對照。
+- `google_sheet_b1_d3.js`：以 Google Sheets API + OAuth token 讀取 B1:D3 的實驗腳本。**目前沒有任何 package 用到**（新架構改走 Apps Script Web App）。
