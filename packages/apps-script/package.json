@@ -12,6 +12,7 @@
     "push": "pnpm build && pnpm dlx @google/clasp push --force"
   },
   "dependencies": {
+    "@watchlist/core": "workspace:*",
     "@watchlist/sheet-api": "workspace:*"
   },
   "devDependencies": {

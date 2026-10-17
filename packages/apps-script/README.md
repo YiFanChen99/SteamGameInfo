@@ -4,7 +4,16 @@
 
 ## 行為
 
-- `doGet`：回傳 `STEAM` 工作表的整表傾印（`{ games, labelMap }`，格式與型別定義在 `@watchlist/sheet-api`）。請求要帶 `?token=`，跟 script property `API_TOKEN` 比對；沒設定 `API_TOKEN` 時一律拒絕。
+所有請求都要帶 `?token=`，跟 script property `API_TOKEN` 比對；沒設定 `API_TOKEN` 時一律拒絕。格式與型別定義在 `@watchlist/sheet-api`。拒絕時回 `{ error, message }`（HTTP 仍是 200）。
+
+- `doGet`：
+  - 不帶 `action`：`STEAM` 工作表的整表傾印（`{ games, labelMap }`）。
+  - `action=row&appId=<id>&columns=<欄名>,<欄名>`：名稱欄連到這個 AppID 的那一列，回 `{ row, values }`。日期格式是 `YYYY/M/D`。
+- `doPost`：body 是 JSON 的 `WriteRequest`。
+  - `update`：只寫指定的欄位。名稱、公式欄（例如 最低$）不能寫，目前含公式的格子也不能寫。
+  - `append`：先確認 Sheet 沒有這個 AppID（有的話回 `duplicate`），再寫到第 4 列起第一個名稱空白的列。上一列的公式（名稱除外）用 R1C1 複製下來，其餘寫入指定欄位。
+  - 寫入期間持有 script lock，寫完清掉傾印快取。
+- 欄位一律以第 1 列的標題名稱定位。AppID 先從名稱欄的 HYPERLINK 公式找，找不到再看格子的連結。
 - 傾印結果 gzip 後分塊存在 CacheService，最長 6 小時；手動編輯 Sheet 時由 `onEdit` 清掉。
 - `WantToOwned`：Sheet 自訂函式，沿用原專案。
 
