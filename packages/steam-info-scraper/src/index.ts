@@ -1,5 +1,7 @@
 export {
     appReviewsUrl,
+    reviewSampleDayRanges,
+    reviewSampleSize,
     reviewSummaryUrl,
     storePageFetchUrl,
     type ReviewPurchaseType,

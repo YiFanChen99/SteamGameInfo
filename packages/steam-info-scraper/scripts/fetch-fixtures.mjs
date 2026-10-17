@@ -61,7 +61,7 @@ const reviewSummaryQuery = purchaseType => new URLSearchParams({
     num_per_page: '0',
 }).toString();
 
-/** Same as `appReviewsUrl` in src/urls.ts, which this script cannot import. Keep them in sync. */
+/** Same as `appReviewsUrl` in src/urls.ts (30 days only), which this script cannot import. Keep them in sync. */
 const appReviewsQuery = new URLSearchParams({
     json: '1',
     filter: 'all',

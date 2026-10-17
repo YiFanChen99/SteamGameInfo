@@ -27,7 +27,7 @@ export function loadReviewSummaryJson(appId: number): string {
 
 /**
  * Serves the saved store page and reviews of any fixture app, as `fetchSteamSnapshot` requests them.
- * Other packages' tests use it too.
+ * The one saved sample answers every day range. Other packages' tests use it too.
  */
 export const fixtureFetchText: FetchText = (url) => {
     const appId = Number(/\/(?:app|appreviews)\/(\d+)/.exec(url)?.[1]);
