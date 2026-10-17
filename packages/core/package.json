@@ -1,0 +1,16 @@
+{
+  "name": "@watchlist/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pure functions shared by the watchlist tools: Steam parsing, playtime stats, sheet columns, name matching, merge rules",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit && eslint .",
+    "test": "vitest run",
+    "fixtures": "node scripts/fetch-fixtures.mjs"
+  }
+}
