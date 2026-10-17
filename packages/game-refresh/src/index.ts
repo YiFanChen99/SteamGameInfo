@@ -2,7 +2,9 @@ import {
     appReviewsUrl,
     computePlaytimeStats,
     parseAppReviews,
+    parseLowestOff,
     parseStorePage,
+    planNewRow,
     planRefresh,
     refreshReadColumns,
     storePageFetchUrl,
@@ -12,6 +14,7 @@ import {
     type SheetRowValues,
     type SteamSnapshot,
 } from '@watchlist/core';
+import type { SheetApi } from '@watchlist/sheet-api';
 
 /**
  * Where refreshed rows are read from and written to, keyed by Steam app id.
@@ -23,6 +26,21 @@ export interface SheetRowStore {
     read(appId: number, columns: readonly ColumnName[]): Promise<SheetRowValues>;
     /** Write only the given cells, leaving the rest of the row alone. */
     write(appId: number, values: SheetRowValues): Promise<void>;
+    /** Add a row for `appId`. Rejects when a row already has it. */
+    append(appId: number, values: SheetRowValues): Promise<void>;
+}
+
+/** A `SheetRowStore` backed by the web app; `api` needs `postText` to write. */
+export function sheetApiRowStore(api: SheetApi): SheetRowStore {
+    return {
+        read: async (appId, columns) => (await api.readRow(appId, columns)).values,
+        write: async (appId, values) => {
+            await api.updateRow(appId, values);
+        },
+        append: async (appId, values) => {
+            await api.appendRow(appId, values);
+        },
+    };
 }
 
 export type ParseHtml = (html: string) => Document;
@@ -71,4 +89,26 @@ export async function refreshGame(appId: number, deps: RefreshDeps): Promise<Ref
     const plan = planRefresh(snapshot, oldRow, deps.now?.() ?? new Date());
     await deps.store.write(appId, plan.updates);
     return plan;
+}
+
+export interface AddDeps extends RefreshDeps {
+    /** Text of the SteamDB extension's price block (`steamDbPricesSelector`), or null without one. */
+    steamDbText: string | null;
+}
+
+/**
+ * Add a row for a game the sheet does not have yet; see `planNewRow`.
+ *
+ * @returns The written cells.
+ */
+export async function addGame(appId: number, deps: AddDeps): Promise<SheetRowValues> {
+    const snapshot = await fetchSteamSnapshot(appId, deps.fetchText, deps.parseHtml);
+    const row = planNewRow({
+        appId,
+        snapshot,
+        lowestOff: parseLowestOff(deps.steamDbText, snapshot.page.originalPrice),
+        today: deps.now?.() ?? new Date(),
+    });
+    await deps.store.append(appId, row);
+    return row;
 }

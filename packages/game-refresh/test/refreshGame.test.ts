@@ -2,9 +2,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { Column, refreshReadColumns, type SheetRowValues } from '@watchlist/core';
+import type { SheetApi } from '@watchlist/sheet-api';
 import { describe, expect, it, vi } from 'vitest';
 
-import { fetchSteamSnapshot, refreshGame, type SheetRowStore } from '../src';
+import { addGame, fetchSteamSnapshot, refreshGame, sheetApiRowStore, type SheetRowStore } from '../src';
 
 const fixtures = join(import.meta.dirname, '../../core/test/fixtures');
 
@@ -22,8 +23,9 @@ function fakeSteam(url: string): Promise<string> {
 function fakeStore(row: SheetRowValues) {
     const read = vi.fn<SheetRowStore['read']>(() => Promise.resolve(row));
     const write = vi.fn<SheetRowStore['write']>(() => Promise.resolve());
-    const store: SheetRowStore = { read, write };
-    return { store, read, write };
+    const append = vi.fn<SheetRowStore['append']>(() => Promise.resolve());
+    const store: SheetRowStore = { read, write, append };
+    return { store, read, write, append };
 }
 
 describe('fetchSteamSnapshot', () => {
@@ -69,5 +71,46 @@ describe('refreshGame', () => {
 
         await expect(refreshGame(2868840, { fetchText: failing, store })).rejects.toThrow('offline');
         expect(write).not.toHaveBeenCalled();
+    });
+});
+
+describe('addGame', () => {
+    it('appends a full row with the lowest discount from the SteamDB block', async () => {
+        const { store, append } = fakeStore({});
+
+        const row = await addGame(2868840, {
+            fetchText: fakeSteam,
+            store,
+            steamDbText: 'Lowest recorded price: NT$ 349',
+            now: () => new Date(2026, 9, 17),
+        });
+
+        expect(append).toHaveBeenCalledWith(2868840, row);
+        expect(row).toMatchObject({
+            [Column.name]: '=HYPERLINK("https://store.steampowered.com/app/2868840/","Slay the Spire 2")',
+            [Column.originalPrice]: 499,
+            [Column.lowestOff]: 30,
+            [Column.wantLevel]: '?',
+            [Column.updatedOn]: '2026/10/17',
+        });
+    });
+});
+
+describe('sheetApiRowStore', () => {
+    it('reads values and forwards writes to the web app', async () => {
+        const api = {
+            readRow: vi.fn(() => Promise.resolve({ row: 9, values: { [Column.special]: '英' } })),
+            updateRow: vi.fn(() => Promise.resolve({ row: 9 })),
+            appendRow: vi.fn(() => Promise.resolve({ row: 10 })),
+        };
+        const store = sheetApiRowStore(api as unknown as SheetApi);
+
+        expect(await store.read(570, [Column.special])).toEqual({ [Column.special]: '英' });
+        await store.write(570, { [Column.special]: '繁' });
+        await store.append(571, { [Column.special]: 'X' });
+
+        expect(api.readRow).toHaveBeenCalledWith(570, [Column.special]);
+        expect(api.updateRow).toHaveBeenCalledWith(570, { [Column.special]: '繁' });
+        expect(api.appendRow).toHaveBeenCalledWith(571, { [Column.special]: 'X' });
     });
 });
