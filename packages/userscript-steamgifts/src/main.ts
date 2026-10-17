@@ -4,8 +4,9 @@ import { getOrFetchData } from './sheetFetcher';
 /**
  * User localstorage keys:
  *  ekkoGames: { games: Array, labelMap, time }
- *  ekkoGamesAccount?: 'yf'
  *  ekkoGamesRegions: Record<string, { value, time }>
+ * Tampermonkey storage keys:
+ *  sheetApiToken: the token the Apps Script web app checks
  */
 async function main(): Promise<void> {
     const sheetData = await getOrFetchData();
@@ -37,4 +38,6 @@ async function main(): Promise<void> {
     }
 }
 
-void main();
+main().catch((error: unknown) => {
+    console.error('SG-Annotator:', error);
+});

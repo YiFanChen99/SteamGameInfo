@@ -71,6 +71,9 @@ importers:
       '@watchlist/core':
         specifier: workspace:*
         version: link:../core
+      '@watchlist/sheet-api':
+        specifier: workspace:*
+        version: link:../sheet-api
     devDependencies:
       '@types/tampermonkey':
         specifier: ^5.0.4

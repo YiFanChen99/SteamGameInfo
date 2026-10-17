@@ -12,6 +12,7 @@
 1. Install [Violentmonkey](https://addons.mozilla.org/en-us/firefox/addon/violentmonkey/) (Firefox) or [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) (Chrome) / [Tampermonkey](https://addons.opera.com/en/extensions/details/tampermonkey-beta/) (Opera).
 2. Open `https://yifanchen99.github.io/game-watchlist-keeper/steamgifts/Script.user.js` or click [here](https://yifanchen99.github.io/game-watchlist-keeper/steamgifts/Script.user.js)
 3. Click `Install`.
+4. 第一次在 SteamGifts 上執行時，輸入 Sheet API 的 token（Apps Script 專案設定裡的 `API_TOKEN`）。
 
 ## Usage
 
@@ -46,9 +47,9 @@ metadata block 的唯一來源是 `scripts/metadata.mjs`，build 時產生。省
 
 #### `src/sheetFetcher.ts` — 取資料
 
-負責從 Google App Script 取得 sheet 內容，並使用快取。
+負責透過 `@watchlist/sheet-api` 從 Apps Script web app（`packages/apps-script`）取得 sheet 內容，並使用快取。
 
-- `getWebAppUrl()`：依 localStorage 的 `ekkoGamesAccount` 決定用哪個帳號的 App Script URL（預設 `pig`，設為 `yf` 則切換）。
+- `getToken()`：web app 需要 token。第一次使用時跳出輸入框，存進 Tampermonkey 的 `sheetApiToken`；token 被拒絕時會清掉並再問一次。
 - `fetchData()`：實際發出請求，回應直接存進 localStorage 的 `ekkoGames`，並附上 `time` 時戳。
 - `getOrFetchData()`：對外的入口。快取未過期就直接沿用，否則重新抓取。回傳 `{ time, games, labelMap }`。
 

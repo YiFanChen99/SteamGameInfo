@@ -1,32 +1,71 @@
+import type { FetchText } from '@watchlist/core';
+import { createSheetApi, SheetApiUnauthorizedError } from '@watchlist/sheet-api';
+
 import type { SheetData } from './types';
 
 const updateDurationMs = 24 * 60 * 60 * 1000; // 24 hours
 
-const webAppUrlPig = 'https://script.google.com/macros/s/AKfycbwZWh1RFJmNCUaaVQyEzMXZRPDF8NlXtPwxyqKp_Wx2uiNqjnoh_yO7k334QdeNRyQR/exec';
-const webAppUrlYf = 'https://script.google.com/macros/s/AKfycbxZ9fqXLb-h-M5D9g6Swy-B7tA4JOcIOphqI1cxNs3d8mA72OrUu1eFZJj5bKNVY-W-/exec';
+const webAppUrl = 'https://script.google.com/macros/s/AKfycbyLkj1F4DL_h8QTn1-jXGPJpVBoo0w5M5nwhuzzlmquqRFvkr6w69nD63Otl6pmOIZS/exec';
 
-function getWebAppUrl(): string {
-    const account = localStorage.getItem('ekkoGamesAccount');
-    if (account === 'yf') {
-        return webAppUrlYf;
+/** Tampermonkey storage key of the token the web app checks. */
+const tokenKey = 'sheetApiToken';
+
+const fetchText: FetchText = url => new Promise((resolve, reject) => {
+    GM_xmlhttpRequest({
+        method: 'GET',
+        url,
+        onload: (response) => {
+            if (response.status < 200 || response.status >= 300) {
+                reject(new Error(`Failed to fetch ${url}: ${response.status}`));
+                return;
+            }
+            resolve(response.responseText);
+        },
+        onerror: (error) => {
+            reject(new Error(`Failed to fetch ${url}: ${error.error}`));
+        },
+    });
+});
+
+/**
+ * @returns The saved token, or one the user enters now; null when they cancel.
+ */
+function getToken(): string | null {
+    const saved = GM_getValue<string>(tokenKey, '');
+    if (saved) {
+        return saved;
     }
-    return webAppUrlPig; // default
+    const entered = window.prompt('SG-Annotator: 請輸入 Sheet API 的 token（Apps Script 的 API_TOKEN）')?.trim();
+    if (!entered) {
+        return null;
+    }
+    GM_setValue(tokenKey, entered);
+    return entered;
 }
 
 async function fetchData(): Promise<SheetData> {
     console.log('SG-Annotator: fetchData starting ...');
-    return new Promise(resolve => {
-        GM_xmlhttpRequest({
-            method: 'GET',
-            url: getWebAppUrl(),
-            onload: function (response) {
-                const resp = JSON.parse(response.responseText) as Omit<SheetData, 'time'>;
-                const data: SheetData = { ...resp, time: Date.now() };
-                localStorage.setItem('ekkoGames', JSON.stringify(data));
-                resolve(data);
-            },
-        });
-    });
+    // A rejected token is forgotten and asked for once more.
+    for (let attempt = 1; ; attempt++) {
+        const token = getToken();
+        if (!token) {
+            throw new Error('SG-Annotator: no Sheet API token');
+        }
+        try {
+            const dump = await createSheetApi({ webAppUrl, token, fetchText }).fetchDump();
+            const data: SheetData = { ...dump, time: Date.now() };
+            localStorage.setItem('ekkoGames', JSON.stringify(data));
+            return data;
+        } catch (error) {
+            if (!(error instanceof SheetApiUnauthorizedError)) {
+                throw error;
+            }
+            GM_deleteValue(tokenKey);
+            if (attempt >= 2) {
+                throw error;
+            }
+        }
+    }
 }
 
 export async function getOrFetchData(): Promise<SheetData> {

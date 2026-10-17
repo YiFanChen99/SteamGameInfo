@@ -23,7 +23,7 @@ export const metadata = {
         '*://www.steamgifts.com/giveaways/search*',
         '*://www.steamgifts.com/giveaway/*',
     ],
-    grant: 'GM_xmlhttpRequest',
+    grant: ['GM_xmlhttpRequest', 'GM_getValue', 'GM_setValue', 'GM_deleteValue'],
     connect: [
         'script.google.com',
         // Apps Script web apps 302-redirect /exec responses here.
