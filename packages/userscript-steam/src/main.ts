@@ -72,8 +72,8 @@ function main(): void {
             await withApi(api => addGame(appId!, { fetchText, store: sheetApiRowStore(api), steamDb }));
         } catch (error) {
             if (error instanceof MissingValueError) {
-                // Retrying will not help; the page lacks the value.
-                panel.setState({ kind: 'add' }, error.message);
+                // Retrying will not help; the page lacks the value. Keep it shown: nothing was added.
+                panel.setState({ kind: 'add' }, error.message, true);
                 return;
             }
             if (!isSheetError(error, 'duplicate')) {
