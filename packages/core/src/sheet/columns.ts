@@ -5,16 +5,23 @@
 export const Column = {
     /** `=HYPERLINK("<store url>","<name>")`; the name may pack aliases separated by `/`. */
     name: '名稱',
+    /** TWD, base game before discount. */
     originalPrice: '原價',
     lowestOff: '最低off',
     releaseDate: '上市日期',
-    /** Positive review percent. */
+    /** Positive review percent: an integer 0–100. */
     reviewScore: '評價度',
     updatedOn: '我更新日期',
     lowestPrice: '最低$',
+    /** The user's own filter tag categories, derived from the store page (rules not defined yet). */
     mode: '模式',
-    /** `[<date>EA。]<language>。中位<n>H，3rd.高<n>H。` plus any hand-written notes. */
-    detail: '特',
+    /** Space-separated tags: the language mark, `Demo`, and any hand-written ones. */
+    special: '特',
+    /**
+     * `[<date>EA。]中位<n>H，3rd.高<n>H。` plus any hand-written notes.
+     * TODO: placeholder header name; the real one is not confirmed yet.
+     */
+    detail: '細節',
 } as const;
 
 export type ColumnName = (typeof Column)[keyof typeof Column];

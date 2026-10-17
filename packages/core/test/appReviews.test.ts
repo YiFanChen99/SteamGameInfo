@@ -10,7 +10,7 @@ describe('parseAppReviews', () => {
         // 303821 / 310049
         expect(info.positivePercent).toBe(98);
         expect(info.totalReviews).toBe(310049);
-        expect(info.playtimeMinutes).toHaveLength(100);
+        expect(info.playtimeMinutes).toHaveLength(50);
         expect(info.playtimeMinutes.every(minutes => Number.isInteger(minutes) && minutes >= 0)).toBe(true);
     });
 

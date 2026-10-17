@@ -1,13 +1,5 @@
 import type { PlaytimeStats } from '../steam/playtime';
-import type { LanguageSupport, StorePageInfo } from '../steam/storePage';
-
-const languageMarks: Record<LanguageSupport, string> = {
-    tchinese: '繁',
-    schinese: '簡',
-    english: '英',
-    none: 'X',
-    unknown: '!',
-};
+import type { StorePageInfo } from '../steam/storePage';
 
 /** Matches what `formatPlaytime` writes, including old `NaN` values from the legacy scraper. */
 const playtimePattern = /中位[^，。]*H，3rd\.高[^。]*H。/;
@@ -22,11 +14,11 @@ export function formatPlaytime(stats: PlaytimeStats): string {
 /**
  * The detail cell for a row that has none yet.
  *
- * @returns e.g. `2026/3/5EA。簡。中位12H，3rd.高85H。`
+ * @returns e.g. `2026/3/5EA。中位12H，3rd.高85H。`
  */
 export function buildDetail(page: StorePageInfo, playtime: PlaytimeStats): string {
     const earlyAccess = page.isEarlyAccess ? `${page.releaseDate ?? ''}EA。` : '';
-    return `${earlyAccess}${languageMarks[page.language]}。${formatPlaytime(playtime)}`;
+    return `${earlyAccess}${formatPlaytime(playtime)}`;
 }
 
 /**

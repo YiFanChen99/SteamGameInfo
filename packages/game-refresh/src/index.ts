@@ -1,13 +1,14 @@
 import {
     appReviewsUrl,
-    buildRefreshUpdates,
-    Column,
     computePlaytimeStats,
     parseAppReviews,
     parseStorePage,
+    planRefresh,
+    refreshReadColumns,
     storePageFetchUrl,
     type ColumnName,
     type FetchText,
+    type RefreshPlan,
     type SheetRowValues,
     type SteamSnapshot,
 } from '@watchlist/core';
@@ -37,9 +38,6 @@ export interface RefreshDeps {
 
 const parseWithDomParser: ParseHtml = html => new DOMParser().parseFromString(html, 'text/html');
 
-/** Columns `buildRefreshUpdates` reads from the old row. */
-const columnsToRead: readonly ColumnName[] = [Column.detail];
-
 /**
  * Fetch the store page and reviews of one app, in parallel.
  */
@@ -63,14 +61,14 @@ export async function fetchSteamSnapshot(
 /**
  * Refresh one game's sheet row from Steam.
  *
- * @returns The cells that were written.
+ * @returns The written cells, and the price / release date changes to show the user.
  */
-export async function refreshGame(appId: number, deps: RefreshDeps): Promise<SheetRowValues> {
+export async function refreshGame(appId: number, deps: RefreshDeps): Promise<RefreshPlan> {
     const [snapshot, oldRow] = await Promise.all([
         fetchSteamSnapshot(appId, deps.fetchText, deps.parseHtml),
-        deps.store.read(appId, columnsToRead),
+        deps.store.read(appId, refreshReadColumns),
     ]);
-    const updates = buildRefreshUpdates(snapshot, oldRow, deps.now?.() ?? new Date());
-    await deps.store.write(appId, updates);
-    return updates;
+    const plan = planRefresh(snapshot, oldRow, deps.now?.() ?? new Date());
+    await deps.store.write(appId, plan.updates);
+    return plan;
 }

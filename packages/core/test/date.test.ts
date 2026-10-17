@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatSheetDate, normalizeReleaseDate } from '../src';
+import { formatSheetDate, normalizeReleaseDate, parseSheetDate } from '../src';
 
 describe('normalizeReleaseDate', () => {
     it.each([
@@ -16,6 +16,20 @@ describe('normalizeReleaseDate', () => {
 
     it.each(['2026 年第四季', '即將推出', ' 待定 '])('keeps partial date %s as text', (input) => {
         expect(normalizeReleaseDate(input)).toBe(input.trim());
+    });
+});
+
+describe('parseSheetDate', () => {
+    it.each([
+        ['2026/3/5'],
+        ['2026 年 3 月 5 日'],
+        [new Date(2026, 2, 5, 13, 30).toISOString()],
+    ])('reads %s as local midnight', (input) => {
+        expect(parseSheetDate(input)).toEqual(new Date(2026, 2, 5));
+    });
+
+    it.each(['2026 年第四季', '', 45000])('returns null for %s', (input) => {
+        expect(parseSheetDate(input)).toBeNull();
     });
 });
 

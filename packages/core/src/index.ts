@@ -1,5 +1,5 @@
 export type { FetchText } from './fetch';
-export { formatSheetDate, normalizeReleaseDate } from './date';
+export { formatSheetDate, normalizeReleaseDate, parseSheetDate } from './date';
 export { createNameMatcher, normalizeName, splitAliases } from './names';
 
 export { appReviewsUrl, extractAppId, storePageFetchUrl, storePageUrl } from './steam/urls';
@@ -9,4 +9,11 @@ export { computePlaytimeStats, type PlaytimeStats } from './steam/playtime';
 
 export { Column, type CellValue, type ColumnName, type SheetRowValues } from './sheet/columns';
 export { buildDetail, formatPlaytime, mergeDetail } from './sheet/detail';
-export { buildRefreshUpdates, type SteamSnapshot } from './sheet/refresh';
+export { mergeSpecial } from './sheet/special';
+export {
+    planRefresh,
+    refreshReadColumns,
+    type RefreshPlan,
+    type SteamSnapshot,
+    type ValueChange,
+} from './sheet/refresh';

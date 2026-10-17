@@ -3,7 +3,7 @@
 由 `pnpm --filter @watchlist/core fixtures`（`scripts/fetch-fixtures.mjs`）抓取，2026-10-17。
 
 - `store/<appid>.html`：以匿名訪客抓的商店頁（`l=tchinese&cc=tw`）
-- `appreviews/<appid>.json`：`/appreviews/<appid>?json=1&language=all&purchase_type=all&filter=all&num_per_page=100`，只保留解析會讀的欄位，不含評論內文
+- `appreviews/<appid>.json`：`/appreviews/<appid>?json=1&language=all&purchase_type=all&filter=all&num_per_page=50`，只保留解析會讀的欄位，不含評論內文
 
 | appid | 遊戲 | 涵蓋情境 |
 |---|---|---|

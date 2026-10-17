@@ -21,6 +21,27 @@ export function formatSheetDate(date: Date): string {
 }
 
 /**
+ * Parse a sheet date cell to local midnight: `YYYY/M/D`, any form `normalizeReleaseDate`
+ * understands, or an ISO timestamp (how a date cell may come back as JSON).
+ *
+ * @returns `null` for anything else, e.g. `2026 年第四季`.
+ */
+export function parseSheetDate(value: string | number): Date | null {
+    const text = String(value).trim();
+    const ymd = /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(normalizeReleaseDate(text));
+    if (ymd) {
+        return new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]));
+    }
+    if (/^\d{4}-\d{2}-\d{2}T/.test(text)) {
+        const date = new Date(text);
+        if (!Number.isNaN(date.getTime())) {
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        }
+    }
+    return null;
+}
+
+/**
  * Convert a Steam release date text to `YYYY/M/D`.
  *
  * @returns The trimmed input when it is not a full date, e.g. `2026 年第四季` or `即將推出`.

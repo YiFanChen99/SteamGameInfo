@@ -11,10 +11,10 @@ export function storePageFetchUrl(appId: number): string {
 }
 
 /**
- * Reviews of all languages and purchase types, most helpful first, at the API's page size limit.
+ * Reviews of all languages and purchase types, most helpful first, 50 per request.
  */
 export function appReviewsUrl(appId: number): string {
-    return `${storeOrigin}/appreviews/${appId}?json=1&language=all&purchase_type=all&filter=all&num_per_page=100`;
+    return `${storeOrigin}/appreviews/${appId}?json=1&language=all&purchase_type=all&filter=all&num_per_page=50`;
 }
 
 /**

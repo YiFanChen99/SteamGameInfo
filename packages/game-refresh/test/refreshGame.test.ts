@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { Column, type SheetRowValues } from '@watchlist/core';
+import { Column, refreshReadColumns, type SheetRowValues } from '@watchlist/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { fetchSteamSnapshot, refreshGame, type SheetRowStore } from '../src';
@@ -37,24 +37,30 @@ describe('fetchSteamSnapshot', () => {
 });
 
 describe('refreshGame', () => {
-    it('writes merged updates back to the same app id', async () => {
-        const { store, read, write } = fakeStore({ [Column.detail]: '2026/3/5EA。簡。中位1H，3rd.高2H。好評再買' });
+    it('writes merged updates back to the same app id and reports changes', async () => {
+        const { store, read, write } = fakeStore({
+            [Column.originalPrice]: 459,
+            [Column.special]: '英 多人',
+            [Column.detail]: '2026/3/5EA。中位1H，3rd.高2H。好評再買',
+        });
 
-        const updates = await refreshGame(2868840, {
+        const { updates, changes } = await refreshGame(2868840, {
             fetchText: fakeSteam,
             store,
             now: () => new Date(2026, 9, 17),
         });
 
-        expect(read).toHaveBeenCalledWith(2868840, [Column.detail]);
+        expect(read).toHaveBeenCalledWith(2868840, refreshReadColumns);
         expect(write).toHaveBeenCalledWith(2868840, updates);
         expect(updates).toMatchObject({
             [Column.originalPrice]: 499,
             [Column.releaseDate]: '2026/3/5',
             [Column.reviewScore]: 61,
             [Column.updatedOn]: '2026/10/17',
+            [Column.special]: '簡 多人',
         });
-        expect(updates[Column.detail]).toMatch(/^2026\/3\/5EA。簡。中位\d+H，3rd\.高\d+H。好評再買$/);
+        expect(updates[Column.detail]).toMatch(/^2026\/3\/5EA。中位\d+H，3rd\.高\d+H。好評再買$/);
+        expect(changes).toEqual([{ column: Column.originalPrice, oldValue: 459, newValue: 499, delta: 40 }]);
     });
 
     it('writes nothing when a fetch fails', async () => {

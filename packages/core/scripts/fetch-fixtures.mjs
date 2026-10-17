@@ -56,7 +56,7 @@ for (const appId of Object.keys(apps)) {
     await writeFile(new URL(`store/${appId}.html`, dir), html);
 
     const reviews = await fetchText(
-        `https://store.steampowered.com/appreviews/${appId}?json=1&language=all&purchase_type=all&filter=all&num_per_page=100`
+        `https://store.steampowered.com/appreviews/${appId}?json=1&language=all&purchase_type=all&filter=all&num_per_page=50`
     );
     await writeFile(new URL(`appreviews/${appId}.json`, dir), `${JSON.stringify(trimAppReviews(reviews), null, 2)}\n`);
 
