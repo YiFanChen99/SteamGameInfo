@@ -2,13 +2,13 @@ import { Column } from '@watchlist/game-record-writer';
 import { describe, expect, it } from 'vitest';
 
 import {
-    findAppendRow,
     indexAppIds,
     indexHeader,
     pickValues,
     planAppend,
     planUpdate,
     RequestError,
+    shiftAppIds,
 } from '../src/rows';
 
 /** A, then B through H as in the sheet; H computes 最低$. */
@@ -46,15 +46,9 @@ describe('indexAppIds', () => {
     });
 });
 
-describe('findAppendRow', () => {
-    it('takes the first blank name from row 4', () => {
-        // Rows 2–6; row 3 is blank but above row 4.
-        expect(findAppendRow(['a', '', 'b', ' ', 'c'])).toBe(5);
-    });
-
-    it('takes the row after the last one when no name is blank', () => {
-        expect(findAppendRow(['a', 'b', 'c'])).toBe(5);
-        expect(findAppendRow([])).toBe(4);
+describe('shiftAppIds', () => {
+    it('moves the rows from the inserted one down by one', () => {
+        expect(shiftAppIds({ 10: 2, 20: 3, 30: 4, 40: 9 }, 4)).toEqual({ 10: 2, 20: 3, 30: 5, 40: 10 });
     });
 });
 

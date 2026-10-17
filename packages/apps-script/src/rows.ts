@@ -14,8 +14,8 @@ import type { CellValue } from './dump';
 export const headerRow = 1;
 /** First row that holds a game. */
 export const firstDataRow = 2;
-/** `append` fills the first row from here whose name is blank. */
-export const firstAppendRow = 4;
+/** `append` inserts a blank row here and fills it; the rows from here move down one. */
+export const appendRow = 4;
 
 /** A refusal to send back as `SheetApiErrorBody`. */
 export class RequestError extends Error {
@@ -66,17 +66,14 @@ export function indexAppIds(links: readonly string[]): AppIdIndex {
 }
 
 /**
- * @param names One entry per name cell from `firstDataRow` down.
- * @returns The 1-based row `append` writes to: the first blank name from `firstAppendRow`,
- *   or the row after the last one.
+ * The index after inserting a row at `row`: rows from `row` down move down one.
  */
-export function findAppendRow(names: readonly CellValue[]): number {
-    for (let row = firstAppendRow; row < names.length + firstDataRow; row++) {
-        if (String(names[row - firstDataRow] ?? '').trim() === '') {
-            return row;
-        }
+export function shiftAppIds(index: AppIdIndex, row: number): AppIdIndex {
+    const shifted: AppIdIndex = {};
+    for (const [appId, at] of Object.entries(index)) {
+        shifted[appId] = at >= row ? at + 1 : at;
     }
-    return Math.max(names.length + firstDataRow, firstAppendRow);
+    return shifted;
 }
 
 /** One cell to set, by 0-based column index. */

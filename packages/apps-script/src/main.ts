@@ -16,8 +16,8 @@ import {
 import { createChunkedCache, type ChunkedCache } from './chunkedCache';
 import { buildDump, firstColumn, lastColumn, worksheetName, type CellValue } from './dump';
 import {
+    appendRow,
     columnIndex,
-    findAppendRow,
     firstDataRow,
     headerRow,
     indexAppIds,
@@ -26,6 +26,7 @@ import {
     planAppend,
     planUpdate,
     RequestError,
+    shiftAppIds,
     type AppIdIndex,
     type CellWrite,
 } from './rows';
@@ -210,12 +211,14 @@ function writeRow(request: WriteRequest): WriteResponse {
             if (existing !== undefined) {
                 throw new RequestError('duplicate', `row ${existing} already links app ${request.appId}`);
             }
-            const names = nameRange(context)?.getValues().map(cells => cells[0] as CellValue) ?? [];
-            row = findAppendRow(names);
+            row = appendRow;
+            // Validate before inserting, so a refused request leaves no blank row behind.
             const template = (sheet.getRange(row - 1, 1, 1, lastColumn).getFormulasR1C1()[0] ?? [])
                 .map(formula => formula ?? '');
-            applyWrites(sheet, row, planAppend(context.columns, request.values, template));
-            appIdIndexCache().put(JSON.stringify({ ...index, [request.appId]: row }));
+            const writes = planAppend(context.columns, request.values, template);
+            sheet.insertRowAfter(row - 1);
+            applyWrites(sheet, row, writes);
+            appIdIndexCache().put(JSON.stringify({ ...shiftAppIds(index, row), [request.appId]: row }));
         }
         SpreadsheetApp.flush();
         // Script edits do not fire onEdit.
