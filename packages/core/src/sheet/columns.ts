@@ -8,10 +8,11 @@ export const Column = {
     /** TWD, base game before discount. */
     originalPrice: '原價',
     lowestOff: '最低off',
-    releaseDate: '上市日期',
+    releaseDate: '上市',
     /** Positive review percent: an integer 0–100. */
     reviewScore: '評價度',
-    updatedOn: '我更新日期',
+    updatedOn: '更新日',
+    /** Computed by a sheet formula from 原價 and 最低off; never write it. */
     lowestPrice: '最低$',
     /** The user's own filter tag categories, derived from the store page (rules not defined yet). */
     mode: '模式',
