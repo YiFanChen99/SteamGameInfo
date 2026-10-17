@@ -15,7 +15,7 @@ const pagesBaseUrl = 'https://yifanchen99.github.io/game-watchlist-keeper/steamg
 /** Repeated keys (`match`, `connect`) are expressed as arrays. */
 export const metadata = {
     name: 'Ekko SteamGifts Annotator',
-    namespace: 'https://github.com/YiFanChen99/tampermonkey--steamgifts-annotator',
+    namespace: 'https://github.com/YiFanChen99/game-watchlist-keeper',
     version: pkg.version,
     description: pkg.description,
     author: pkg.author,
