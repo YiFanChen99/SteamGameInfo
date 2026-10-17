@@ -1,5 +1,5 @@
 import { extractAppId } from '@watchlist/core';
-import { addGame, MissingValueError, refreshGame, sheetApiRowStore } from '@watchlist/game-record-writer';
+import { addGame, formatChange, MissingValueError, refreshGame, sheetApiRowStore } from '@watchlist/game-record-writer';
 import {
     createSheetApi,
     deployedWebAppUrl,
@@ -10,7 +10,7 @@ import {
 import { readSteamDbPrices } from '@watchlist/steam-info-scraper';
 
 import { fetchText, forgetToken, getToken, postText } from './gm';
-import { formatChange, Panel } from './panel';
+import { Panel } from './panel';
 
 /**
  * Tampermonkey storage keys:

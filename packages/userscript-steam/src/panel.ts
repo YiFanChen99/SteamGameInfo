@@ -1,5 +1,3 @@
-import { Column, type ValueChange } from '@watchlist/game-record-writer';
-
 export type PanelState =
     | { kind: 'checking' }
     | { kind: 'add' }
@@ -14,16 +12,6 @@ const labels: Record<PanelState['kind'], string> = {
     busy: '',
     error: '重試',
 };
-
-/**
- * @returns e.g. `原價 459 → 499（+40）`, `上市 2026/2/26 → 2026/3/5（+7 天）` or
- *   `備註 中位1H，3rd.高2H。 → 中位33H，3rd.高145H。`.
- */
-export function formatChange({ column, oldValue, newValue, delta }: ValueChange): string {
-    const unit = column === Column.releaseDate ? ' 天' : '';
-    const signed = delta === null ? '' : `（${delta > 0 ? '+' : ''}${delta}${unit}）`;
-    return `${column} ${oldValue ?? '（無）'} → ${newValue}${signed}`;
-}
 
 /** How long a message stays unless it reports a failure, which stays until clicked. */
 const messageLifetimeMs = 60_000;

@@ -1,7 +1,16 @@
 import type { SteamSnapshot, StorePageInfo } from '@watchlist/steam-info-scraper';
 import { describe, expect, it } from 'vitest';
 
-import { buildDetail, Column, extractPlaytime, mergeDetail, mergeSpecial, planRefresh, type PlaytimeStats } from '../src';
+import {
+    buildDetail,
+    Column,
+    extractPlaytime,
+    formatChange,
+    mergeDetail,
+    mergeSpecial,
+    planRefresh,
+    type PlaytimeStats,
+} from '../src';
 
 const page: StorePageInfo = {
     name: 'Slay the Spire 2',
@@ -198,5 +207,19 @@ describe('planRefresh', () => {
 
         expect(Object.keys(updates).sort()).toEqual([Column.updatedOn, Column.special, Column.detail].sort());
         expect(changes).toEqual([]);
+    });
+});
+
+describe('formatChange', () => {
+    it('signs the delta, with days for the release date', () => {
+        expect(formatChange({ column: Column.originalPrice, oldValue: 459, newValue: 499, delta: 40 })).toBe('原價 459 → 499（+40）');
+        expect(formatChange({ column: Column.releaseDate, oldValue: '2026/3/5', newValue: '2026/2/26', delta: -7 }))
+            .toBe('上市 2026/3/5 → 2026/2/26（-7 天）');
+    });
+
+    it('omits a missing delta and marks a missing old value', () => {
+        expect(formatChange({ column: Column.special, oldValue: '英', newValue: '簡 Demo', delta: null })).toBe('特 英 → 簡 Demo');
+        expect(formatChange({ column: Column.detail, oldValue: null, newValue: '中位3H，3rd.高-H。', delta: null }))
+            .toBe('備註 （無） → 中位3H，3rd.高-H。');
     });
 });
