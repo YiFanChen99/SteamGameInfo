@@ -1,22 +1,37 @@
 # @watchlist/apps-script
 
-子元件1：Google Apps Script Web App，負責查詢與寫入遊戲追蹤 Sheet。
+子元件1：Google Apps Script Web App，負責查詢與寫入遊戲追蹤 Sheet。這個 script 綁定在 Sheet 上。
 
-現行程式碼的快照放在 `original/`（clasp clone，同一個專案有 `pig`、`yf` 兩個部署）。
+## 行為
 
-## 把現有原始碼抓進來
+- `doGet`：回傳 `STEAM` 工作表的整表傾印（`{ games, labelMap }`，格式與型別定義在 `@watchlist/sheet-api`）。請求要帶 `?token=`，跟 script property `API_TOKEN` 比對；沒設定 `API_TOKEN` 時一律拒絕。
+- 傾印結果 gzip 後分塊存在 CacheService，最長 6 小時；手動編輯 Sheet 時由 `onEdit` 清掉。
+- `WantToOwned`：Sheet 自訂函式，沿用原專案。
 
-1. 到 <https://script.google.com/home/usersettings> 開啟「Google Apps Script API」。
-2. 在 Apps Script 網頁編輯器的「專案設定」→「ID」複製**指令碼 ID**（scriptId）。
-3. 在本目錄執行（`login` 會開瀏覽器，用擁有該專案的帳號登入）：
+部署設定在 `appsscript.json`：以部署者身分執行（`USER_DEPLOYING`）、匿名存取（`ANYONE_ANONYMOUS`），由 token 把關。
 
-   ```sh
-   pnpm dlx @google/clasp login
-   pnpm dlx @google/clasp clone <scriptId> --rootDir original
-   ```
+## 目錄
 
-   所有檔案（含 `appsscript.json`）會放進 `original/`，並在本目錄產生 `.clasp.json`。
+- `src/`：原始碼。`main.ts` 的每個 export 都會在 `dist/Code.js` 尾端宣告成全域函式（清單在 `scripts/build.mjs`）。
+- `original/`：搬進 repo 前的線上程式碼快照，只供參考，不會部署。
+- `dist/`：`pnpm build` 的產出（`Code.js` + `appsscript.json`），也是 `.clasp.json` 的 `rootDir`。不進版控。
 
-`pig`、`yf` 如果是兩個不同的專案（scriptId 不同），請分別 clone 到 `original-pig/`、`original-yf/`，並把產生的 `.clasp.json` 改名，以免互相覆蓋。
+## 部署
 
-`original/` 是現行程式碼的快照，只用來參考與做 M1 實驗。正式版會寫在 `src/`，用 esbuild 打包到 `dist/` 後再 `clasp push`，部署規則見 PLAN 第 3 節。
+repo 是唯一來源：`clasp push` 會整包覆蓋線上專案，不要在網頁編輯器改程式碼。
+
+第一次使用：到 <https://script.google.com/home/usersettings> 開啟「Google Apps Script API」，再執行 `pnpm dlx @google/clasp login`（用擁有專案的帳號）。
+
+在本目錄執行：
+
+```sh
+pnpm push                                            # build 後 clasp push，更新線上 HEAD
+pnpm dlx @google/clasp deployments                   # 列出部署
+pnpm dlx @google/clasp deploy -i <deploymentId>      # 把既有部署更新到新版本，/exec URL 不變
+```
+
+`clasp deploy` 不帶 `-i` 會新建一個部署（新的 URL）。userscript 用的部署 ID 寫在 `packages/userscript-steamgifts/src/sheetFetcher.ts`。
+
+### token
+
+在 Apps Script 網頁編輯器的「專案設定」→「指令碼屬性」新增 `API_TOKEN`。每台電腦的 userscript 第一次執行時會要求輸入同一個值。
