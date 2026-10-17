@@ -1,4 +1,4 @@
-export type { FetchText } from './fetch';
+export type { FetchText, PostText } from './fetch';
 export { formatSheetDate, normalizeReleaseDate, parseSheetDate } from './date';
 export { createNameMatcher, normalizeName, splitAliases } from './names';
 

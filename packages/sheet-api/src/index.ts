@@ -1,4 +1,4 @@
-import type { FetchText } from '@watchlist/core';
+import type { ColumnName, FetchText, PostText, SheetRowValues } from '@watchlist/core';
 
 /**
  * One row of the whole-sheet dump, keyed by column letter to keep the payload small.
@@ -18,18 +18,64 @@ export interface SheetDump {
     labelMap: Record<string, unknown>;
 }
 
-/** Query parameter that carries the shared token. */
+/** Query parameter that carries the shared token, on GET and POST alike. */
 export const tokenParam = 'token';
 
-/** Body the web app returns, with status 200, when the token is missing or wrong. */
+/**
+ * GET `?action=row&appId=<id>&columns=<name>,<name>`: the row whose name HYPERLINK links `appId`.
+ * Without `action`, GET returns the whole-sheet dump.
+ */
+export const rowAction = 'row';
+
+/** Response of the `row` action. */
+export interface RowResponse {
+    /** 1-based sheet row. */
+    row: number;
+    /** The requested columns, keyed by header name. Dates come as `YYYY/M/D`. */
+    values: SheetRowValues;
+}
+
+/** POST body: write cells of the row with `appId`, or add a row for it. */
+export interface WriteRequest {
+    action: 'update' | 'append';
+    appId: number;
+    /** Keyed by header name; the web app refuses columns it does not allow writing. */
+    values: SheetRowValues;
+}
+
+/** Response of a POST. */
+export interface WriteResponse {
+    /** 1-based sheet row that was written. */
+    row: number;
+}
+
+/**
+ * - `unauthorized`: the token is missing or wrong.
+ * - `not-found`: no row has the app id.
+ * - `duplicate`: `append` for an app id the sheet already has.
+ * - `invalid`: a malformed request, or a column that may not be written.
+ * - `internal`: the web app failed; `message` has the exception.
+ */
+export type SheetApiErrorCode = 'unauthorized' | 'not-found' | 'duplicate' | 'invalid' | 'internal';
+
+/** Body the web app returns, with status 200, when it refuses a request. */
 export interface SheetApiErrorBody {
-    error: 'unauthorized';
+    error: SheetApiErrorCode;
+    message?: string;
+}
+
+/** The web app refused the request; `code` says why. */
+export class SheetApiError extends Error {
+    constructor(readonly code: SheetApiErrorCode, message?: string) {
+        super(message ? `Sheet API: ${code}: ${message}` : `Sheet API: ${code}`);
+        this.name = 'SheetApiError';
+    }
 }
 
 /** The token was missing or wrong; ask the user for it again. */
-export class SheetApiUnauthorizedError extends Error {
+export class SheetApiUnauthorizedError extends SheetApiError {
     constructor() {
-        super('Sheet API rejected the token');
+        super('unauthorized');
         this.name = 'SheetApiUnauthorizedError';
     }
 }
@@ -41,26 +87,71 @@ export interface SheetApiOptions {
     token: string;
     /** Must follow redirects: Apps Script redirects `/exec` to `script.googleusercontent.com`. */
     fetchText: FetchText;
+    /** Needed only by the write methods. Must follow redirects, as `fetchText`. */
+    postText?: PostText;
 }
 
 export interface SheetApi {
     /** The whole sheet, as the web app dumps it. */
     fetchDump(): Promise<SheetDump>;
+    /** Rejects with code `not-found` when no row has `appId`. */
+    readRow(appId: number, columns: readonly ColumnName[]): Promise<RowResponse>;
+    /** @returns The row with `appId`, or null. */
+    findRow(appId: number): Promise<number | null>;
+    /** Write only the given cells of the row with `appId`. */
+    updateRow(appId: number, values: SheetRowValues): Promise<WriteResponse>;
+    /** Add a row for `appId`; rejects with code `duplicate` when the sheet already has one. */
+    appendRow(appId: number, values: SheetRowValues): Promise<WriteResponse>;
 }
 
-export function createSheetApi({ webAppUrl, token, fetchText }: SheetApiOptions): SheetApi {
-    const url = `${webAppUrl}?${tokenParam}=${encodeURIComponent(token)}`;
-    return {
+function parseResponse<T>(body: string): T {
+    const data = JSON.parse(body) as Partial<SheetApiErrorBody>;
+    if (data.error === 'unauthorized') {
+        throw new SheetApiUnauthorizedError();
+    }
+    if (data.error) {
+        throw new SheetApiError(data.error, data.message);
+    }
+    return data as T;
+}
+
+export function createSheetApi({ webAppUrl, token, fetchText, postText }: SheetApiOptions): SheetApi {
+    const baseUrl = `${webAppUrl}?${tokenParam}=${encodeURIComponent(token)}`;
+
+    async function write(request: WriteRequest): Promise<WriteResponse> {
+        if (!postText) {
+            throw new Error('Sheet API: writing needs postText');
+        }
+        return parseResponse<WriteResponse>(await postText(baseUrl, JSON.stringify(request)));
+    }
+
+    const api: SheetApi = {
         async fetchDump() {
-            const body = await fetchText(url);
-            const data = JSON.parse(body) as Partial<SheetDump & SheetApiErrorBody>;
-            if (data.error === 'unauthorized') {
-                throw new SheetApiUnauthorizedError();
-            }
+            const data = parseResponse<Partial<SheetDump>>(await fetchText(baseUrl));
             if (!Array.isArray(data.games)) {
                 throw new Error('Sheet dump has no games array');
             }
             return { games: data.games, labelMap: data.labelMap ?? {} };
         },
+
+        async readRow(appId, columns) {
+            const query = `&action=${rowAction}&appId=${appId}&columns=${encodeURIComponent(columns.join(','))}`;
+            return parseResponse<RowResponse>(await fetchText(`${baseUrl}${query}`));
+        },
+
+        async findRow(appId) {
+            try {
+                return (await api.readRow(appId, [])).row;
+            } catch (error) {
+                if (error instanceof SheetApiError && error.code === 'not-found') {
+                    return null;
+                }
+                throw error;
+            }
+        },
+
+        updateRow: (appId, values) => write({ action: 'update', appId, values }),
+        appendRow: (appId, values) => write({ action: 'append', appId, values }),
     };
+    return api;
 }
