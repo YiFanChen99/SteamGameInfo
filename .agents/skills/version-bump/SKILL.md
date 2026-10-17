@@ -34,6 +34,6 @@ userscript 會把它依賴的 workspace library 一起打包，所以下列路�
 
 完成條件：每支有變更的 userscript，目前 `version` 都等於目標版本。
 
-## 切換日之前的 userscript-steamgifts
+## userscript-steamgifts 的來歷
 
-正式版仍由原 annotator repo 發佈（見 PLAN.md 第 4 節「切換日」），修改經 `git subtree pull` 進來時已帶著原 repo bump 過的版本，照上面的步驟算出來會「等於目標 → 不動」。不要為了 monorepo 內的同步再額外 bump。
+它原本由獨立的 annotator repo 發佈，2.0.2 起改由本 repo 發佈。原 repo 已停止發佈，所以直接在這裡修改，照上面的步驟 bump；不要再從原 repo `git subtree pull`。
