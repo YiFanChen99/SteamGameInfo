@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 // Shared by every package. ESLint uses the config nearest to each linted file,
 // so a package only needs its own eslint.config.js to diverge from this one.
 export default defineConfig([
-    globalIgnores(['**/dist/', '**/legacy/', '_site/']),
+    globalIgnores(['**/dist/', '**/legacy/', 'packages/apps-script/original/', '_site/']),
 
     {
         files: ['**/*.{js,mjs}'],
