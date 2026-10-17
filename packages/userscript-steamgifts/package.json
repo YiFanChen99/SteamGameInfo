@@ -1,6 +1,6 @@
 {
   "name": "@watchlist/userscript-steamgifts",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "private": true,
   "description": "Annotate SteamGifts giveaways with wishlist rating (from Google Sheet) and region-restriction count",
   "author": "YiFanChen99",
