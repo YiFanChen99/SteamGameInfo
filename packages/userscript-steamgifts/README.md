@@ -10,7 +10,7 @@
 ## Installation
 
 1. Install [Violentmonkey](https://addons.mozilla.org/en-us/firefox/addon/violentmonkey/) (Firefox) or [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) (Chrome) / [Tampermonkey](https://addons.opera.com/en/extensions/details/tampermonkey-beta/) (Opera).
-2. Open `https://yifanchen99.github.io/tampermonkey--steamgifts-annotator/Script.user.js` or click [here](https://yifanchen99.github.io/tampermonkey--steamgifts-annotator/Script.user.js)
+2. Open `https://yifanchen99.github.io/game-watchlist-keeper/steamgifts/Script.user.js` or click [here](https://yifanchen99.github.io/game-watchlist-keeper/steamgifts/Script.user.js)
 3. Click `Install`.
 
 ## Usage
@@ -36,7 +36,7 @@ pnpm --filter @watchlist/userscript-steamgifts check   # tsc --noEmit + ESLint
 pnpm --filter @watchlist/userscript-steamgifts build   # 產出 dist/Script.user.js
 ```
 
-`dist/` 不進版控。push 到 `main` 後由 monorepo 根目錄的 `.github/workflows/pages.yml` 建置並發佈到 GitHub Pages。在切換日之前，安裝網址仍是上方原 repo 的 Pages。
+`dist/` 不進版控。push 到 `main` 後由 monorepo 根目錄的 `.github/workflows/pages.yml` 建置並發佈到 GitHub Pages。版本號照根目錄的 `version-bump` skill 調整。
 
 metadata block 的唯一來源是 `scripts/metadata.mjs`，build 時產生。省略 `@updateURL`，讓 Tampermonkey 直接用 `@downloadURL` 做更新檢查，所以不需要額外維護 `.meta.js`。
 
