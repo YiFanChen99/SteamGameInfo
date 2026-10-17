@@ -7,6 +7,8 @@
 - 這款遊戲我想要的程度？
 - 區域限制涵蓋多少區域數量？
 
+標了更新年份的遊戲，年份旁另外有一個 ↻，按下去用 Steam 的最新資料刷新 Sheet 裡這款遊戲的那一列。
+
 ## Installation
 
 1. Install [Violentmonkey](https://addons.mozilla.org/en-us/firefox/addon/violentmonkey/) (Firefox) or [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) (Chrome) / [Tampermonkey](https://addons.opera.com/en/extensions/details/tampermonkey-beta/) (Opera).
@@ -22,6 +24,14 @@
 - **區域限制涵蓋多少區域數量？** 有區域限制的抽獎，解析出區域數量，補在區域圖示旁邊。
 
 撈取的資料有快取機制。
+
+**↻ 刷新**：標註裡有年份（`(Y19)`，或從沒更新過的 `(Y-)`）、而且遊戲的 Steam 連結有 AppID 時（組合包的 `sub/` 連結沒有），↻ 放在年份的括號裡，例如 `(W4) (Y19↻)`。按下去會抓 Steam 商店頁與評論，照 `@watchlist/game-record-writer` 的規則（`COLUMNS.md`）寫回 Sheet 的那一列，結果顯示在按鈕旁：
+
+- 成功：`已更新。` 加上變動（例如 `原價 400 → 408（+8）`），1 分鐘後或點一下就消失。標註與 localStorage 的 `ekkoGames` 會跟著改成今天更新，不重抓整張表，所以年份和 ↻ 一起消失。
+- Sheet 沒有這款遊戲：只提示，不新增（新增在 Steam 商店頁用 `userscript-steam` 做）。這個訊息和錯誤訊息都保留到點掉為止。
+- 最低off 不會更新：SteamGifts 上沒有 SteamDB 區塊。
+
+第一次使用時，Tampermonkey 會要求允許連線到 `store.steampowered.com`。
 
 ## Development
 
@@ -45,13 +55,18 @@ metadata block 的唯一來源是 `scripts/metadata.mjs`，build 時產生。省
 
 `src/main.ts` 是進入點，依網址判斷是列表頁（`/giveaways/search`）或單一頁（`/giveaway/`），再呼叫對應的 modifier。
 
+#### `src/gm.ts` — 請求與 token
+
+- `fetchText` / `postText`：用 `GM_xmlhttpRequest` 實作，注入給 library。
+- `withSheetApi()`：web app 需要 token。第一次使用時跳出輸入框，存進 Tampermonkey 的 `sheetApiToken`；token 被拒絕時會清掉並再問一次。
+
 #### `src/sheetFetcher.ts` — 取資料
 
 負責透過 `@watchlist/sheet-api` 從 Apps Script web app（`packages/apps-script`）取得 sheet 內容，並使用快取。
 
-- `getToken()`：web app 需要 token。第一次使用時跳出輸入框，存進 Tampermonkey 的 `sheetApiToken`；token 被拒絕時會清掉並再問一次。
 - `fetchData()`：實際發出請求，回應直接存進 localStorage 的 `ekkoGames`，並附上 `time` 時戳。
 - `getOrFetchData()`：對外的入口。快取未過期就直接沿用，否則重新抓取。回傳 `{ time, games, labelMap }`。
+- `markUpdated()`：刷新後把快取裡同名（`B` 等於名稱格）的遊戲的 `G` 改成今天，`time` 不變，所以快取照原本的時間過期。
 
 sheet 資料以欄位代號存取（`B` 遊戲名、`G` 日期、`K` 想要程度，見 `src/types.ts`），這一層不對內容做任何加工。
 
@@ -59,7 +74,13 @@ sheet 資料以欄位代號存取（`B` 遊戲名、`G` 日期、`K` 想要程�
 
 把 sheet 資料對應到畫面上的遊戲，並將結果附加上去。
 
-- 標題：補上 期待度 與 更新時間（如果太久）
+- 標題：補上 期待度 與 更新時間（如果太久）。標註放在 `.ekko-annotation` 裡，再跑一次會整段換掉；有年份時在括號裡放 ↻（同一個標題的按鈕會重用，刷新中的狀態不會被重畫打斷）。
 - 區域限制：（與 sheet 無關）另外抓取各遊戲的區域限制頁面取得數量後標示，並快取結果。
+
+#### `src/refreshButton.ts`、`src/refresh.ts` — ↻ 刷新
+
+- `RefreshButton`：↻ 按鈕與狀態訊息，由 `HeaderModifier` 放進標註。狀態訊息放在標註後面，所以 ↻ 消失後訊息還在。
+- `findAppId()`：從標題區塊的 Steam 連結取 AppID。
+- `refreshRow()`：呼叫 `@watchlist/game-record-writer` 的 `refreshGame`。讀舊值時順便讀名稱欄，交給 `markUpdated()` 找快取裡的那一筆。
 
 localStorage 用到的 key 列在 `src/main.ts` 開頭的註解。

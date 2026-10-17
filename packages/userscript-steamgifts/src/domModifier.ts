@@ -1,5 +1,6 @@
 import { createNameMatcher } from '@watchlist/core';
 
+import { findAppId, RefreshButton, type OnRefreshed } from './refreshButton';
 import type { SheetData, SheetGame } from './types';
 
 /**
@@ -32,14 +33,19 @@ class HeaderDisplayFormatter {
     }
 }
 
+/** The span holding a header's annotation, so it can be replaced. */
+const annotationClass = 'ekko-annotation';
+
 export class HeaderModifier {
     /**
      * Matches a giveaway name (maybe with an extra 'xxx edition') to sheet games.
      * One game on exact match, otherwise all partial matches.
      */
     private readonly matchGames: (rawName: string) => SheetGame[];
+    /** Created the first time a header shows a year mark, then reused so a busy one stays busy. */
+    private readonly refreshButtons = new WeakMap<HTMLElement, RefreshButton>();
 
-    constructor(sheetData: SheetData) {
+    constructor(sheetData: SheetData, private readonly onRefreshed: OnRefreshed) {
         this.matchGames = createNameMatcher(sheetData.games, game => game.B);
     }
 
@@ -68,7 +74,11 @@ export class HeaderModifier {
     }
 
     /**
-     * Match header name with sheet data and modify DOM
+     * Match header name with sheet data and modify DOM.
+     * Running it again replaces the annotation, e.g. after a refresh changed the update date.
+     *
+     * A year mark gets a ↻ inside it, e.g. `(W4) (Y19↻)`, when the giveaway's Steam link has an
+     * app id (a bundle's `sub/` link has none). The refresh drops the mark, and the ↻ with it.
      * @returns Whether modified successfully
      */
     private modify(headerElement: HTMLElement | null): boolean {
@@ -83,15 +93,38 @@ export class HeaderModifier {
 
         const want = HeaderDisplayFormatter.toWant(games);
         const year = HeaderDisplayFormatter.toUpdateYear(games);
-        const yearMaybe = year ? ` (${year})` : '';
 
         const pointElement = headerElement.nextElementSibling;
-        if (pointElement instanceof HTMLElement) {
-            // HACK: Use change innerText instead to insert a new node
-            pointElement.innerText += ` (${want})${yearMaybe}`;
-            return true;
+        if (!(pointElement instanceof HTMLElement)) {
+            return false;
         }
-        return false;
+        let annotation = pointElement.querySelector<HTMLElement>(`.${annotationClass}`);
+        if (!annotation) {
+            annotation = document.createElement('span');
+            annotation.className = annotationClass;
+            pointElement.append(annotation);
+        }
+        const refresh = year ? this.refreshButtonFor(headerElement, annotation) : undefined;
+        annotation.replaceChildren(
+            ` (${want})`,
+            ...(year ? [` (${year}`, ...(refresh ? [refresh.button] : []), ')'] : []),
+        );
+        return true;
+    }
+
+    /** The header's ↻, its status put after `annotation`; undefined without an app id. */
+    private refreshButtonFor(headerElement: HTMLElement, annotation: HTMLElement): RefreshButton | undefined {
+        let refresh = this.refreshButtons.get(headerElement);
+        if (!refresh) {
+            const appId = headerElement.parentElement && findAppId(headerElement.parentElement);
+            if (!appId) {
+                return undefined;
+            }
+            refresh = new RefreshButton(appId, this.onRefreshed);
+            this.refreshButtons.set(headerElement, refresh);
+            annotation.after(refresh.status);
+        }
+        return refresh;
     }
 }
 

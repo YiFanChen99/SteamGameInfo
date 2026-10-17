@@ -1,73 +1,24 @@
-import type { FetchText } from '@watchlist/core';
-import { createSheetApi, deployedWebAppUrl, SheetApiUnauthorizedError } from '@watchlist/sheet-api';
-
+import { withSheetApi } from './gm';
 import type { SheetData } from './types';
 
 const updateDurationMs = 24 * 60 * 60 * 1000; // 24 hours
 
-/** Tampermonkey storage key of the token the web app checks. */
-const tokenKey = 'sheetApiToken';
+const storageKey = 'ekkoGames';
 
-const fetchText: FetchText = url => new Promise((resolve, reject) => {
-    GM_xmlhttpRequest({
-        method: 'GET',
-        url,
-        onload: (response) => {
-            if (response.status < 200 || response.status >= 300) {
-                reject(new Error(`Failed to fetch ${url}: ${response.status}`));
-                return;
-            }
-            resolve(response.responseText);
-        },
-        onerror: (error) => {
-            reject(new Error(`Failed to fetch ${url}: ${error.error}`));
-        },
-    });
-});
-
-/**
- * @returns The saved token, or one the user enters now; null when they cancel.
- */
-function getToken(): string | null {
-    const saved = GM_getValue<string>(tokenKey, '');
-    if (saved) {
-        return saved;
-    }
-    const entered = window.prompt('SteamGifts Annotator: 請輸入 Sheet API 的 token（Apps Script 的 API_TOKEN）')?.trim();
-    if (!entered) {
-        return null;
-    }
-    GM_setValue(tokenKey, entered);
-    return entered;
+function saveData(data: SheetData): void {
+    localStorage.setItem(storageKey, JSON.stringify(data));
 }
 
 async function fetchData(): Promise<SheetData> {
     console.log('SteamGifts Annotator: fetchData starting ...');
-    // A rejected token is forgotten and asked for once more.
-    for (let attempt = 1; ; attempt++) {
-        const token = getToken();
-        if (!token) {
-            throw new Error('SteamGifts Annotator: no Sheet API token');
-        }
-        try {
-            const dump = await createSheetApi({ webAppUrl: deployedWebAppUrl, token, fetchText }).fetchDump();
-            const data: SheetData = { ...dump, time: Date.now() };
-            localStorage.setItem('ekkoGames', JSON.stringify(data));
-            return data;
-        } catch (error) {
-            if (!(error instanceof SheetApiUnauthorizedError)) {
-                throw error;
-            }
-            GM_deleteValue(tokenKey);
-            if (attempt >= 2) {
-                throw error;
-            }
-        }
-    }
+    const dump = await withSheetApi(api => api.fetchDump());
+    const data: SheetData = { ...dump, time: Date.now() };
+    saveData(data);
+    return data;
 }
 
 export async function getOrFetchData(): Promise<SheetData> {
-    const old = localStorage.getItem('ekkoGames');
+    const old = localStorage.getItem(storageKey);
     if (old) {
         const record = JSON.parse(old) as SheetData;
         const diffMs = Date.now() - record.time;
@@ -79,4 +30,24 @@ export async function getOrFetchData(): Promise<SheetData> {
     } else {
         return await fetchData();
     }
+}
+
+/**
+ * After a refresh wrote 更新日, set it on the matching games of `data` in place and save,
+ * so the annotation drops its old year without refetching the sheet. The fetch time is
+ * kept, so the cache still expires on schedule.
+ *
+ * @param name The refreshed row's whole name cell, as the dump's `B` has it.
+ * @returns Whether any game matched.
+ */
+export function markUpdated(data: SheetData, name: string, updatedOn: Date): boolean {
+    const games = data.games.filter(game => game.B === name);
+    for (const game of games) {
+        // Same text the web app dumps.
+        game.G = updatedOn.toDateString();
+    }
+    if (games.length) {
+        saveData(data);
+    }
+    return games.length > 0;
 }

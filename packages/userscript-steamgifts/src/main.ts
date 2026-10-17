@@ -1,5 +1,5 @@
 import { HeaderModifier, RegionModifier } from './domModifier';
-import { getOrFetchData } from './sheetFetcher';
+import { getOrFetchData, markUpdated } from './sheetFetcher';
 
 /**
  * User localstorage keys:
@@ -23,7 +23,18 @@ async function main(): Promise<void> {
         return;
     }
 
-    const headerModifier = new HeaderModifier(sheetData);
+    /** A refresh wrote 更新日: update the cached dump, then the annotations (the year mark may go). */
+    const onRefreshed = (name: string, updatedOn: Date) => {
+        if (!markUpdated(sheetData, name, updatedOn)) {
+            return;
+        }
+        if (isGiveawaysPage) {
+            headerModifier.modifyGiveaways();
+        } else {
+            headerModifier.modifyGiveaway();
+        }
+    };
+    const headerModifier = new HeaderModifier(sheetData, onRefreshed);
     const regionModifier = new RegionModifier();
     if (isGiveawaysPage) {
         const count = headerModifier.modifyGiveaways();

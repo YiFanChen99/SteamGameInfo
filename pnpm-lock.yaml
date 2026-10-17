@@ -111,6 +111,9 @@ importers:
       '@watchlist/core':
         specifier: workspace:*
         version: link:../core
+      '@watchlist/game-record-writer':
+        specifier: workspace:*
+        version: link:../game-record-writer
       '@watchlist/sheet-api':
         specifier: workspace:*
         version: link:../sheet-api

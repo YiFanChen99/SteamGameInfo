@@ -29,6 +29,8 @@ export const metadata = {
         // Apps Script web apps 302-redirect /exec responses here.
         'script.googleusercontent.com',
         'www.steamgifts.com',
+        // ↻ refreshes a row from the store page and its reviews.
+        'store.steampowered.com',
     ],
     icon: `${pagesBaseUrl}/favicon.ico`,
     downloadURL: `${pagesBaseUrl}/Script.user.js`,
