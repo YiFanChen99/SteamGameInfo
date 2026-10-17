@@ -43,7 +43,7 @@ export interface RefreshDeps {
     now?: () => Date;
     /**
      * The SteamDB block (`readSteamDbPrices`), where the page has one.
-     * Refresh: null or absent leaves 最低off alone. Add: null writes `-`.
+     * Refresh: null or absent leaves 最低off alone. Add: null writes `defaultLowestOff` (0).
      */
     steamDb?: SteamDbPrices | null;
 }
