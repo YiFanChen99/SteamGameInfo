@@ -48,7 +48,7 @@ export function columnIndex(columns: ReadonlyMap<string, number>, name: string):
 }
 
 /**
- * @param links One entry per name cell from `firstDataRow` down: its formula or link URL.
+ * @param links One entry per name cell from `firstDataRow` down: its formula.
  * @returns The 1-based row of the first cell linking `appId`, or null.
  */
 export function findAppIdRow(links: readonly string[], appId: number): number | null {

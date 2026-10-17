@@ -92,20 +92,15 @@ function nameRange({ sheet, nameColumn }: SheetContext): GoogleAppsScript.Spread
 }
 
 /**
- * The row whose name links `appId`: by its HYPERLINK formula first, then by a plain link,
- * which costs another read and only matters for rows typed in by hand.
+ * The row whose name's HYPERLINK formula links `appId`. Names are always HYPERLINK formulas,
+ * never inserted links, so the formulas are the only thing read.
  */
 function findRow(context: SheetContext, appId: number): number | null {
     const range = nameRange(context);
     if (!range) {
         return null;
     }
-    const byFormula = findAppIdRow(range.getFormulas().map(cells => String(cells[0] ?? '')), appId);
-    if (byFormula !== null) {
-        return byFormula;
-    }
-    const links = range.getRichTextValues().map(cells => cells[0]?.getLinkUrl() ?? '');
-    return findAppIdRow(links, appId);
+    return findAppIdRow(range.getFormulas().map(cells => String(cells[0] ?? '')), appId);
 }
 
 function requireRow(context: SheetContext, appId: number): number {
