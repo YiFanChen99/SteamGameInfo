@@ -37,6 +37,13 @@ export function buildDetail(page: StorePageInfo, playtime: PlaytimeStats): strin
 }
 
 /**
+ * @returns The playtime part of a detail cell, e.g. `中位12H，3rd.高85H。`; `null` when it has none.
+ */
+export function extractPlaytime(detail: string): string | null {
+    return playtimePattern.exec(detail)?.[0] ?? null;
+}
+
+/**
  * Refresh only the playtime part of an existing detail cell and keep everything else.
  * Appends when there is no playtime part yet.
  */

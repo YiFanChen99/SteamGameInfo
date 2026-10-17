@@ -2,14 +2,16 @@ import type { AppReviewsInfo, SteamSnapshot } from '@watchlist/steam-info-scrape
 
 import { Column, type CellValue, type ColumnName, type SheetRowValues } from './columns';
 import { formatReleaseDate, formatSheetDate, parseSheetDate } from './date';
-import { buildDetail, mergeDetail } from './detail';
+import { buildDetail, extractPlaytime, mergeDetail } from './detail';
 import { computePlaytimeStats } from './playtime';
 import { mergeSpecial } from './special';
 
 /** A value the refresh changed, worth showing to the user. */
 export interface ValueChange {
     column: ColumnName;
-    oldValue: CellValue;
+    /** 備註: only the playtime part; `null` when the old cell had none. */
+    oldValue: CellValue | null;
+    /** 備註: only the playtime part. */
     newValue: CellValue;
     /**
      * Price: new − old, in TWD. Release date: new − old, in days.
@@ -21,7 +23,7 @@ export interface ValueChange {
 export interface RefreshPlan {
     /** Only the cells to write. */
     updates: SheetRowValues;
-    /** Changed price, release date, special and detail cells. Filling a blank cell is not a change. */
+    /** Changed price, release date, special and detail playtime. Filling a blank cell is not a change. */
     changes: ValueChange[];
 }
 
@@ -84,12 +86,25 @@ function releaseDateChange(oldValue: CellValue | undefined, newValue: string): V
     return String(oldValue).trim() === newValue ? null : { column: Column.releaseDate, oldValue, newValue, delta: null };
 }
 
-/** A merged text cell (特, 備註) that differs from its old, non-blank value. */
-function textChange(column: ColumnName, oldValue: CellValue | undefined, newValue: string): ValueChange | null {
+/** 特 when it differs from its old, non-blank value. */
+function specialChange(oldValue: CellValue | undefined, newValue: string): ValueChange | null {
     if (isBlank(oldValue) || String(oldValue).trim() === newValue) {
         return null;
     }
-    return { column, oldValue, newValue, delta: null };
+    return { column: Column.special, oldValue, newValue, delta: null };
+}
+
+/** 備註's playtime part when it differs from the old, non-blank cell's; the rest is never changed. */
+function detailChange(oldValue: CellValue | undefined, newValue: string): ValueChange | null {
+    if (isBlank(oldValue)) {
+        return null;
+    }
+    const oldPlaytime = extractPlaytime(String(oldValue));
+    const newPlaytime = extractPlaytime(newValue);
+    if (newPlaytime === null || oldPlaytime === newPlaytime) {
+        return null;
+    }
+    return { column: Column.detail, oldValue: oldPlaytime, newValue: newPlaytime, delta: null };
 }
 
 /** 原價 is a whole number of TWD. */
@@ -108,7 +123,7 @@ export function formatPrice(price: number): number {
  * - The update date becomes `today`.
  * - The special cell gets its language mark and `Demo` tag refreshed; see `mergeSpecial`.
  * - The detail cell only gets its playtime part replaced; see `mergeDetail`.
- * - Changes to the special and detail cells are reported too.
+ * - Changes to the special cell and the detail cell's playtime part are reported too.
  * - Name, want level and mode are never touched.
  *
  * @param oldRow The row's current values for `refreshReadColumns`.
@@ -155,7 +170,7 @@ export function planRefresh(
         : mergeDetail(String(oldDetail).trim(), playtime);
     updates[Column.detail] = detail;
 
-    for (const change of [textChange(Column.special, oldSpecial, special), textChange(Column.detail, oldDetail, detail)]) {
+    for (const change of [specialChange(oldSpecial, special), detailChange(oldDetail, detail)]) {
         if (change) changes.push(change);
     }
     return { updates, changes };

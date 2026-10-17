@@ -1,7 +1,7 @@
 import type { SteamSnapshot, StorePageInfo } from '@watchlist/steam-info-scraper';
 import { describe, expect, it } from 'vitest';
 
-import { buildDetail, Column, mergeDetail, mergeSpecial, planRefresh, type PlaytimeStats } from '../src';
+import { buildDetail, Column, extractPlaytime, mergeDetail, mergeSpecial, planRefresh, type PlaytimeStats } from '../src';
 
 const page: StorePageInfo = {
     name: 'Slay the Spire 2',
@@ -48,6 +48,17 @@ describe('mergeDetail (COLUMNS.md 備註：更新)', () => {
 
     it('appends playtime when the cell has none', () => {
         expect(mergeDetail('等正式版。', playtime)).toBe('等正式版。中位125H，3rd.高725H。');
+    });
+});
+
+describe('extractPlaytime', () => {
+    it('finds the playtime part among hand-written notes', () => {
+        expect(extractPlaytime('好玩。26/03EA。中位40H，3rd.高300H。等正式版')).toBe('中位40H，3rd.高300H。');
+        expect(extractPlaytime('英。中位NaNH，3rd.高NaNH。')).toBe('中位NaNH，3rd.高NaNH。');
+    });
+
+    it('returns null without one', () => {
+        expect(extractPlaytime('等正式版。')).toBeNull();
     });
 });
 
@@ -118,8 +129,21 @@ describe('planRefresh', () => {
 
         expect(planRefresh(snapshot, oldRow, today).changes).toEqual([
             { column: Column.special, oldValue: '英 Demo', newValue: '簡', delta: null },
-            { column: Column.detail, oldValue: '好玩。中位40H，3rd.高300H。', newValue: '好玩。中位125H，3rd.高725H。', delta: null },
+            { column: Column.detail, oldValue: '中位40H，3rd.高300H。', newValue: '中位125H，3rd.高725H。', delta: null },
         ]);
+    });
+
+    it('reports an appended playtime part against nothing', () => {
+        const oldRow = { [Column.detail]: '等正式版。' };
+
+        expect(planRefresh(snapshot, oldRow, today).changes).toEqual([
+            { column: Column.detail, oldValue: null, newValue: '中位125H，3rd.高725H。', delta: null },
+        ]);
+    });
+
+    it('does not report a detail cell whose playtime is unchanged', () => {
+        const oldRow = { [Column.detail]: '好玩。中位125H，3rd.高725H。' };
+        expect(planRefresh(snapshot, oldRow, today).changes).toEqual([]);
     });
 
     it('fills blank cells without reporting them as changes', () => {

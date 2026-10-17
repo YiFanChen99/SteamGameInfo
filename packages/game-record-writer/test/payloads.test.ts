@@ -55,7 +55,7 @@ const cell = (value: CellValue | undefined) => (value === undefined ? '—' : `\
 function formatChange({ column, oldValue, newValue, delta }: ValueChange): string {
     const unit = column === Column.releaseDate ? ' 天' : '';
     const signed = delta === null ? '' : `（${delta > 0 ? '+' : ''}${delta}${unit}）`;
-    return `- ${column}：${cell(oldValue)} → ${cell(newValue)}${signed}`;
+    return `- ${column}：${oldValue === null ? '（無）' : cell(oldValue)} → ${cell(newValue)}${signed}`;
 }
 
 async function describeGame(appId: number, label: string): Promise<string> {

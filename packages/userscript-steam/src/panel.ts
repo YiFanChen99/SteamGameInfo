@@ -16,12 +16,13 @@ const labels: Record<PanelState['kind'], string> = {
 };
 
 /**
- * @returns e.g. `原價 459 → 499（+40）` or `上市 2026/2/26 → 2026/3/5（+7 天）`.
+ * @returns e.g. `原價 459 → 499（+40）`, `上市 2026/2/26 → 2026/3/5（+7 天）` or
+ *   `備註 中位1H，3rd.高2H。 → 中位33H，3rd.高145H。`.
  */
 export function formatChange({ column, oldValue, newValue, delta }: ValueChange): string {
     const unit = column === Column.releaseDate ? ' 天' : '';
     const signed = delta === null ? '' : `（${delta > 0 ? '+' : ''}${delta}${unit}）`;
-    return `${column} ${oldValue} → ${newValue}${signed}`;
+    return `${column} ${oldValue ?? '（無）'} → ${newValue}${signed}`;
 }
 
 /** The one button, plus a status line under it, fixed at the page's top right. */
