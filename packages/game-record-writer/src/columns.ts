@@ -28,6 +28,9 @@ export type ColumnName = (typeof Column)[keyof typeof Column];
 
 export type CellValue = string | number;
 
+/** Written where COLUMNS.md requires a value whose rule is not defined yet (模式, 遊戲特點敘述). */
+export const todoPlaceholder = 'TODO';
+
 /** Some cells of one row, keyed by header name. */
 export type SheetRowValues = Partial<Record<ColumnName, CellValue>>;
 

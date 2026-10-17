@@ -1,5 +1,5 @@
 import { extractAppId } from '@watchlist/core';
-import { addGame, refreshGame, sheetApiRowStore } from '@watchlist/game-record-writer';
+import { addGame, MissingValueError, refreshGame, sheetApiRowStore } from '@watchlist/game-record-writer';
 import {
     createSheetApi,
     deployedWebAppUrl,
@@ -71,6 +71,11 @@ function main(): void {
         try {
             await withApi(api => addGame(appId!, { fetchText, store: sheetApiRowStore(api), steamDb }));
         } catch (error) {
+            if (error instanceof MissingValueError) {
+                // Retrying will not help; the page lacks the value.
+                panel.setState({ kind: 'add' }, error.message);
+                return;
+            }
             if (!isSheetError(error, 'duplicate')) {
                 throw error;
             }
@@ -79,7 +84,7 @@ function main(): void {
             return;
         }
         action = 'update';
-        panel.setState({ kind: 'update' }, steamDb === null ? '已新增。沒有 SteamDB 區塊，最低off 寫 -。' : '已新增。');
+        panel.setState({ kind: 'update' }, steamDb === null ? '已新增。沒有 SteamDB 區塊，最低off 寫 0。' : '已新增。');
     }
 
     async function update(): Promise<void> {

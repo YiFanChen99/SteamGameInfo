@@ -1,5 +1,6 @@
 export {
     Column,
+    todoPlaceholder,
     updatableColumns,
     type CellValue,
     type ColumnName,
@@ -7,10 +8,11 @@ export {
 } from './columns';
 export { formatReleaseDate, formatSheetDate, parseSheetDate } from './date';
 export { computePlaytimeStats, type PlaytimeStats } from './playtime';
-export { planLowestOff } from './lowestOff';
+export { defaultLowestOff, planLowestOff } from './lowestOff';
 export { buildDetail, formatPlaytime, mergeDetail } from './detail';
 export { mergeSpecial } from './special';
 export {
+    formatPrice,
     planRefresh,
     refreshReadColumns,
     reviewScore,
@@ -19,7 +21,7 @@ export {
     type RefreshPlan,
     type ValueChange,
 } from './refresh';
-export { buildNameFormula, planNewRow, unratedWantLevel, type NewRowInput } from './newRow';
+export { buildNameFormula, MissingValueError, planNewRow, unratedWantLevel, type NewRowInput } from './newRow';
 export {
     addGame,
     refreshGame,

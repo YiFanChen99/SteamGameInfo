@@ -21,7 +21,7 @@ export interface ValueChange {
 export interface RefreshPlan {
     /** Only the cells to write. */
     updates: SheetRowValues;
-    /** Changed price and release date. Filling a blank cell is not a change. */
+    /** Changed price, release date, special and detail cells. Filling a blank cell is not a change. */
     changes: ValueChange[];
 }
 
@@ -44,7 +44,7 @@ export interface RefreshOptions {
      * From `planLowestOff`, where the SteamDB block can be read (the Steam store page).
      * `null` or absent leaves 最低off alone.
      */
-    lowestOff?: number | '-' | null;
+    lowestOff?: number | null;
 }
 
 const msPerDay = 24 * 60 * 60 * 1000;
@@ -84,17 +84,31 @@ function releaseDateChange(oldValue: CellValue | undefined, newValue: string): V
     return String(oldValue).trim() === newValue ? null : { column: Column.releaseDate, oldValue, newValue, delta: null };
 }
 
+/** A merged text cell (特, 備註) that differs from its old, non-blank value. */
+function textChange(column: ColumnName, oldValue: CellValue | undefined, newValue: string): ValueChange | null {
+    if (isBlank(oldValue) || String(oldValue).trim() === newValue) {
+        return null;
+    }
+    return { column, oldValue, newValue, delta: null };
+}
+
+/** 原價 is a whole number of TWD. */
+export function formatPrice(price: number): number {
+    return Math.round(price);
+}
+
 /**
  * Decide which cells of an existing row to write after fetching fresh Steam data.
  * The rules are listed in COLUMNS.md.
  *
- * - Price, release date and review score are replaced when Steam has them, and left alone
- *   when it does not (e.g. no price before release). Price and date changes are reported,
- *   except replacing `unknownPricePlaceholder`.
+ * - Price (rounded), release date and review score are replaced when Steam has them, and
+ *   left alone when it does not (e.g. no price before release). Price and date changes are
+ *   reported, except replacing `unknownPricePlaceholder`.
  * - The lowest discount is written only when `options.lowestOff` has one.
  * - The update date becomes `today`.
  * - The special cell gets its language mark and `Demo` tag refreshed; see `mergeSpecial`.
  * - The detail cell only gets its playtime part replaced; see `mergeDetail`.
+ * - Changes to the special and detail cells are reported too.
  * - Name, want level and mode are never touched.
  *
  * @param oldRow The row's current values for `refreshReadColumns`.
@@ -111,8 +125,9 @@ export function planRefresh(
     const changes: ValueChange[] = [];
 
     if (page.originalPrice !== null) {
-        updates[Column.originalPrice] = page.originalPrice;
-        const change = priceChange(oldRow[Column.originalPrice], page.originalPrice);
+        const price = formatPrice(page.originalPrice);
+        updates[Column.originalPrice] = price;
+        const change = priceChange(oldRow[Column.originalPrice], price);
         if (change) changes.push(change);
     }
     if (options.lowestOff !== undefined && options.lowestOff !== null) {
@@ -130,12 +145,18 @@ export function planRefresh(
     }
     updates[Column.updatedOn] = formatSheetDate(today);
 
-    updates[Column.special] = mergeSpecial(String(oldRow[Column.special] ?? ''), page);
+    const oldSpecial = oldRow[Column.special];
+    const special = mergeSpecial(String(oldSpecial ?? ''), page);
+    updates[Column.special] = special;
 
     const oldDetail = oldRow[Column.detail];
-    updates[Column.detail] = isBlank(oldDetail)
+    const detail = isBlank(oldDetail)
         ? buildDetail(page, playtime)
         : mergeDetail(String(oldDetail).trim(), playtime);
+    updates[Column.detail] = detail;
 
+    for (const change of [textChange(Column.special, oldSpecial, special), textChange(Column.detail, oldDetail, detail)]) {
+        if (change) changes.push(change);
+    }
     return { updates, changes };
 }

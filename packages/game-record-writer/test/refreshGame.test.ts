@@ -24,8 +24,8 @@ describe('refreshGame', () => {
     it('writes merged updates back to the same app id and reports changes', async () => {
         const { store, read, write } = fakeStore({
             [Column.originalPrice]: 459,
-            [Column.special]: '英 多人',
-            [Column.detail]: '2026/3/5EA。中位1H，3rd.高2H。好評再買',
+            [Column.special]: '英',
+            [Column.detail]: '手寫的遊戲特點。26/03EA。中位1H，3rd.高2H。',
         });
 
         const { updates, changes } = await refreshGame(2868840, {
@@ -41,10 +41,11 @@ describe('refreshGame', () => {
             [Column.releaseDate]: '2026/3/5',
             [Column.reviewScore]: 61,
             [Column.updatedOn]: '2026/10/17',
-            [Column.special]: '簡 多人',
+            [Column.special]: '簡',
         });
-        expect(updates[Column.detail]).toMatch(/^2026\/3\/5EA。中位\d+H，3rd\.高\d+H。好評再買$/);
-        expect(changes).toEqual([{ column: Column.originalPrice, oldValue: 459, newValue: 499, delta: 40 }]);
+        expect(updates[Column.detail]).toMatch(/^手寫的遊戲特點。26\/03EA。中位\d+H，3rd\.高\d+H。$/);
+        expect(changes.map(change => change.column)).toEqual([Column.originalPrice, Column.special, Column.detail]);
+        expect(changes[0]).toEqual({ column: Column.originalPrice, oldValue: 459, newValue: 499, delta: 40 });
     });
 
     it('writes nothing when a fetch fails', async () => {

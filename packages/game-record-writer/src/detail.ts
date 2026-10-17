@@ -1,6 +1,6 @@
-import type { StorePageInfo } from '@watchlist/steam-info-scraper';
+import type { ReleaseDate, StorePageInfo } from '@watchlist/steam-info-scraper';
 
-import { formatReleaseDate } from './date';
+import { todoPlaceholder } from './columns';
 import type { PlaytimeStats } from './playtime';
 
 /** Matches what `formatPlaytime` writes, including old `NaN` values from the legacy scraper. */
@@ -13,20 +13,32 @@ export function formatPlaytime(stats: PlaytimeStats): string {
     return `中位${stats.medianHours ?? '-'}H，3rd.高${stats.thirdHighestHours ?? '-'}H。`;
 }
 
-/**
- * The detail cell for a row that has none yet.
- *
- * @returns e.g. `2026/3/5EA。中位12H，3rd.高85H。`
- */
-export function buildDetail(page: StorePageInfo, playtime: PlaytimeStats): string {
-    const releaseDate = page.releaseDate ? formatReleaseDate(page.releaseDate) : '';
-    const earlyAccess = page.isEarlyAccess ? `${releaseDate}EA。` : '';
-    return `${earlyAccess}${formatPlaytime(playtime)}`;
+/** `YY/MM`, e.g. `26/03`; Steam's text when it is not a full date. */
+function formatEarlyAccessDate(releaseDate: ReleaseDate | null): string {
+    if (!releaseDate?.date) {
+        return releaseDate?.text ?? '';
+    }
+    const pad = (value: number) => String(value).padStart(2, '0');
+    return `${pad(releaseDate.date.year % 100)}/${pad(releaseDate.date.month)}`;
 }
 
 /**
- * Refresh the playtime part of an existing detail cell and keep everything else,
- * since the cell also holds hand-written notes. Appends when there is no playtime part yet.
+ * The detail cell of a new row (COLUMNS.md 備註): the game feature description, then the
+ * added structure — `YY/MMEA。` for early access, then the playtime.
+ *
+ * The feature description has no rule yet, so it is `TODO。` for now.
+ *
+ * @returns e.g. `TODO。26/03EA。中位12H，3rd.高85H。`
+ */
+export function buildDetail(page: StorePageInfo, playtime: PlaytimeStats): string {
+    const features = `${todoPlaceholder}。`;
+    const earlyAccess = page.isEarlyAccess ? `${formatEarlyAccessDate(page.releaseDate)}EA。` : '';
+    return `${features}${earlyAccess}${formatPlaytime(playtime)}`;
+}
+
+/**
+ * Refresh only the playtime part of an existing detail cell and keep everything else.
+ * Appends when there is no playtime part yet.
  */
 export function mergeDetail(oldDetail: string, playtime: PlaytimeStats): string {
     const fresh = formatPlaytime(playtime);

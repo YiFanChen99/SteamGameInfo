@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import type { SteamSnapshot } from '@watchlist/steam-info-scraper';
 
-import { buildNameFormula, Column, planLowestOff, planNewRow } from '../src';
+import { buildNameFormula, Column, MissingValueError, planLowestOff, planNewRow } from '../src';
 
-describe('planLowestOff', () => {
+describe('planLowestOff (COLUMNS.md 最低off)', () => {
     it('turns the lowest price into a discount off the original price', () => {
         expect(planLowestOff({ lowestPrice: 149 }, 499)).toBe(70);
         expect(planLowestOff({ lowestPrice: 1190 }, 1490)).toBe(20);
@@ -15,14 +15,18 @@ describe('planLowestOff', () => {
         expect(planLowestOff({ lowestPrice: 590 }, 499)).toBe(0);
     });
 
-    it('writes 100 for a free game, and - without a readable lowest price', () => {
+    it('writes 100 for a free game', () => {
         expect(planLowestOff(null, 0)).toBe(100);
-        expect(planLowestOff(null, 499)).toBe('-');
-        expect(planLowestOff({ lowestPrice: null }, 499)).toBe('-');
+        expect(planLowestOff({ lowestPrice: null }, 0)).toBe(100);
     });
 
-    it('leaves the cell alone without an original price', () => {
+    it('leaves the cell blank without an original price, or when the block shows no price', () => {
         expect(planLowestOff({ lowestPrice: 149 }, null)).toBeNull();
+        expect(planLowestOff({ lowestPrice: null }, 499)).toBeNull();
+    });
+
+    it('defaults to 0 without a SteamDB block', () => {
+        expect(planLowestOff(null, 499)).toBe(0);
     });
 });
 
@@ -48,7 +52,7 @@ describe('planNewRow', () => {
     };
     const today = new Date(2026, 9, 17);
 
-    it('fills every cell a refresh would, plus name, lowest discount and an unrated want level', () => {
+    it('fills every cell a refresh would, plus name, lowest discount, an unrated want level and a TODO mode', () => {
         expect(planNewRow({ appId: 2868840, snapshot, lowestOff: 30, today })).toEqual({
             [Column.name]: '=HYPERLINK("https://store.steampowered.com/app/2868840/","Slay the Spire 2")',
             [Column.originalPrice]: 499,
@@ -57,8 +61,9 @@ describe('planNewRow', () => {
             [Column.reviewScore]: 61,
             [Column.updatedOn]: '2026/10/17',
             [Column.wantLevel]: '?',
+            [Column.mode]: 'TODO',
             [Column.special]: '簡',
-            [Column.detail]: '2026/3/5EA。中位125H，3rd.高725H。',
+            [Column.detail]: 'TODO。26/03EA。中位125H，3rd.高725H。',
         });
     });
 
@@ -70,11 +75,13 @@ describe('planNewRow', () => {
         expect(row).not.toHaveProperty(Column.lowestOff);
     });
 
-    it('falls back to the app id as name, and skips an unknown lowest discount', () => {
+    it('refuses a row without a name or release date: both 必有 without a default', () => {
         const unnamed: SteamSnapshot = { ...snapshot, page: { ...snapshot.page, name: null } };
-        const row = planNewRow({ appId: 42, snapshot: unnamed, lowestOff: null, today });
+        const undated: SteamSnapshot = { ...snapshot, page: { ...snapshot.page, releaseDate: null } };
 
-        expect(row[Column.name]).toBe('=HYPERLINK("https://store.steampowered.com/app/42/","42")');
-        expect(row).not.toHaveProperty(Column.lowestOff);
+        expect(() => planNewRow({ appId: 42, snapshot: unnamed, lowestOff: null, today }))
+            .toThrow(new MissingValueError(Column.name));
+        expect(() => planNewRow({ appId: 42, snapshot: undated, lowestOff: null, today }))
+            .toThrow(new MissingValueError(Column.releaseDate));
     });
 });

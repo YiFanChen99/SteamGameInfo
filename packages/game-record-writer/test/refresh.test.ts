@@ -19,21 +19,27 @@ const snapshot: SteamSnapshot = {
 };
 const today = new Date(2026, 9, 17);
 
-describe('buildDetail', () => {
-    it('writes the early access date and playtime', () => {
-        expect(buildDetail(page, playtime)).toBe('2026/3/5EA。中位125H，3rd.高725H。');
+describe('buildDetail (COLUMNS.md 備註：新增)', () => {
+    it('writes YY/MMEA。 for early access, then the playtime', () => {
+        expect(buildDetail(page, playtime)).toBe('TODO。26/03EA。中位125H，3rd.高725H。');
+    });
+
+    it('keeps Steam text as the early access date when it is not a full date', () => {
+        const vague: StorePageInfo = { ...page, releaseDate: { text: '2026 年第四季', date: null } };
+        expect(buildDetail(vague, playtime)).toBe('TODO。2026 年第四季EA。中位125H，3rd.高725H。');
     });
 
     it('omits the early access part and marks unknown numbers', () => {
         const released: StorePageInfo = { ...page, isEarlyAccess: false };
-        expect(buildDetail(released, { medianHours: 3, thirdHighestHours: null })).toBe('中位3H，3rd.高-H。');
+        expect(buildDetail(released, { medianHours: 3, thirdHighestHours: null })).toBe('TODO。中位3H，3rd.高-H。');
+        expect(buildDetail(released, { medianHours: null, thirdHighestHours: null })).toBe('TODO。中位-H，3rd.高-H。');
     });
 });
 
-describe('mergeDetail', () => {
-    it('replaces only the playtime part, keeping hand-written notes', () => {
-        expect(mergeDetail('2026/3/5EA。中位40H，3rd.高300H。等正式版', playtime))
-            .toBe('2026/3/5EA。中位125H，3rd.高725H。等正式版');
+describe('mergeDetail (COLUMNS.md 備註：更新)', () => {
+    it('replaces only the playtime part, keeping everything else', () => {
+        expect(mergeDetail('Roguelike 牌組構築。26/03EA。中位40H，3rd.高300H。等正式版', playtime))
+            .toBe('Roguelike 牌組構築。26/03EA。中位125H，3rd.高725H。等正式版');
     });
 
     it('replaces NaN values left by the legacy scraper', () => {
@@ -45,24 +51,39 @@ describe('mergeDetail', () => {
     });
 });
 
-describe('mergeSpecial', () => {
-    it('builds the language mark and Demo tag for a blank cell', () => {
-        expect(mergeSpecial('', { ...page, interfaceLanguages: ['繁體中文'], hasDemo: true })).toBe('繁 Demo');
-        expect(mergeSpecial('', { ...page, interfaceLanguages: ['日文'] })).toBe('X');
+describe('mergeSpecial (COLUMNS.md 特)', () => {
+    const withLanguages = (...interfaceLanguages: string[]): StorePageInfo => ({ ...page, interfaceLanguages });
+
+    it('例：舊 英，頁面支援簡中、有 Demo → 簡 Demo', () => {
+        expect(mergeSpecial('英', { ...withLanguages('簡體中文'), hasDemo: true })).toBe('簡 Demo');
     });
 
-    it('replaces the language mark and keeps hand-written tags', () => {
-        expect(mergeSpecial('英 多人', page)).toBe('簡 多人');
-        expect(mergeSpecial('無', page)).toBe('簡');
+    it('marks a blank cell 繁 > 簡 > 英, X without any of them', () => {
+        expect(mergeSpecial('', withLanguages('英文', '繁體中文'))).toBe('繁');
+        expect(mergeSpecial('', withLanguages('英文'))).toBe('英');
+        expect(mergeSpecial('', withLanguages('日文'))).toBe('X');
+    });
+
+    it('replaces the language only with a higher-priority one, never downgrading', () => {
+        expect(mergeSpecial('X', withLanguages('英文'))).toBe('英');
+        expect(mergeSpecial('繁', withLanguages('簡體中文'))).toBe('繁');
+        expect(mergeSpecial('簡', withLanguages('日文'))).toBe('簡');
+    });
+
+    it('treats everything but Demo as the language part, hand-written ones included', () => {
+        expect(mergeSpecial('簡(機翻) Demo', withLanguages('日文'))).toBe('簡(機翻)');
+        expect(mergeSpecial('簡(機翻)', withLanguages('繁體中文'))).toBe('繁');
+        expect(mergeSpecial('無', withLanguages('英文'))).toBe('英');
     });
 
     it('drops Demo once the page has none', () => {
-        expect(mergeSpecial('簡 Demo', page)).toBe('簡');
+        expect(mergeSpecial('簡 Demo', withLanguages('簡體中文'))).toBe('簡');
     });
 
-    it('keeps the old language mark when the page has no language table', () => {
+    it('keeps the old language without a language table, and writes ! for a blank cell', () => {
         expect(mergeSpecial('繁', { ...page, interfaceLanguages: null })).toBe('繁');
         expect(mergeSpecial('', { ...page, interfaceLanguages: null })).toBe('!');
+        expect(mergeSpecial('!', withLanguages('日文'))).toBe('X');
     });
 });
 
@@ -72,7 +93,7 @@ describe('planRefresh', () => {
             [Column.originalPrice]: 499,
             [Column.releaseDate]: '2026/3/5',
             [Column.special]: '簡',
-            [Column.detail]: '2026/3/5EA。中位40H，3rd.高300H。',
+            [Column.detail]: 'TODO。26/03EA。中位125H，3rd.高725H。',
         };
         expect(planRefresh(snapshot, oldRow, today)).toEqual({
             updates: {
@@ -81,17 +102,31 @@ describe('planRefresh', () => {
                 [Column.reviewScore]: 61,
                 [Column.updatedOn]: '2026/10/17',
                 [Column.special]: '簡',
-                [Column.detail]: '2026/3/5EA。中位125H，3rd.高725H。',
+                [Column.detail]: 'TODO。26/03EA。中位125H，3rd.高725H。',
             },
             changes: [],
         });
+    });
+
+    it('rounds the price to whole TWD', () => {
+        const decimal: SteamSnapshot = { ...snapshot, page: { ...page, originalPrice: 888.3 } };
+        expect(planRefresh(decimal, {}, today).updates[Column.originalPrice]).toBe(888);
+    });
+
+    it('reports changed special and detail cells', () => {
+        const oldRow = { [Column.special]: '英 Demo', [Column.detail]: '好玩。中位40H，3rd.高300H。' };
+
+        expect(planRefresh(snapshot, oldRow, today).changes).toEqual([
+            { column: Column.special, oldValue: '英 Demo', newValue: '簡', delta: null },
+            { column: Column.detail, oldValue: '好玩。中位40H，3rd.高300H。', newValue: '好玩。中位125H，3rd.高725H。', delta: null },
+        ]);
     });
 
     it('fills blank cells without reporting them as changes', () => {
         const { updates, changes } = planRefresh(snapshot, { [Column.detail]: '  ' }, today);
 
         expect(updates[Column.special]).toBe('簡');
-        expect(updates[Column.detail]).toBe('2026/3/5EA。中位125H，3rd.高725H。');
+        expect(updates[Column.detail]).toBe('TODO。26/03EA。中位125H，3rd.高725H。');
         expect(changes).toEqual([]);
     });
 
@@ -118,7 +153,6 @@ describe('planRefresh', () => {
 
     it('writes the lowest discount only when one is given', () => {
         expect(planRefresh(snapshot, {}, today, { lowestOff: 30 }).updates[Column.lowestOff]).toBe(30);
-        expect(planRefresh(snapshot, {}, today, { lowestOff: '-' }).updates[Column.lowestOff]).toBe('-');
         expect(planRefresh(snapshot, {}, today, { lowestOff: null }).updates).not.toHaveProperty(Column.lowestOff);
         expect(planRefresh(snapshot, {}, today).updates).not.toHaveProperty(Column.lowestOff);
     });

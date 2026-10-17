@@ -8,15 +8,22 @@ const preferredLanguages: readonly (readonly [language: string, mark: string])[]
 ];
 /** None of the preferred languages has interface support. */
 const noLanguageMark = 'X';
-/** The page has no language table, and the cell no mark to keep. */
+/** A new row whose page has no language table. */
 const unknownLanguageMark = '!';
 
-/** Every language mark this module writes, plus `無` written by the legacy steam_lookup.js. */
-const knownLanguageMarks = new Set([
-    ...preferredLanguages.map(([, mark]) => mark), noLanguageMark, unknownLanguageMark, '無',
-]);
-
 const demoTag = 'Demo';
+
+/**
+ * Lower is preferred. A hand-written language part ranks below the preferred languages but
+ * above `X`, so only a real 繁 / 簡 / 英 replaces it. `!` (unknown) ranks last.
+ */
+function languageRank(language: string): number {
+    const preferred = preferredLanguages.findIndex(([, mark]) => mark === language);
+    if (preferred >= 0) return preferred;
+    if (language === noLanguageMark || language === '無') return preferredLanguages.length + 1;
+    if (language === unknownLanguageMark) return preferredLanguages.length + 2;
+    return preferredLanguages.length;
+}
 
 /** @returns `null` when the page has no language table. */
 function languageMark(interfaceLanguages: readonly string[] | null): string | null {
@@ -27,17 +34,25 @@ function languageMark(interfaceLanguages: readonly string[] | null): string | nu
 }
 
 /**
- * Refresh the language mark and `Demo` tag of a special cell, keeping any other tags.
- * For a blank cell this gives e.g. `繁 Demo` or `英`.
+ * The special cell: a language part, then `Demo` when the page has a demo (COLUMNS.md 特).
  *
- * `Demo` follows the page, so it disappears once a demo is taken down. A page without a
- * language table keeps the old language mark.
+ * The old language part is everything but `Demo`, possibly hand-written. The page's mark
+ * replaces it only when it ranks higher (see `languageRank`), so a refresh never downgrades it.
+ * Without a language table the old part stays; a blank cell gets `!`.
+ *
+ * e.g. old `英`, page with simplified Chinese and a demo → `簡 Demo`.
  */
 export function mergeSpecial(oldSpecial: string, page: StorePageInfo): string {
-    const tokens = oldSpecial.split(/\s+/).filter(Boolean);
-    const oldMark = tokens.find(token => knownLanguageMarks.has(token));
-    const others = tokens.filter(token => !knownLanguageMarks.has(token) && token !== demoTag);
+    const oldLanguage = oldSpecial.split(/\s+/).filter(token => token && token !== demoTag).join(' ');
+    const mark = languageMark(page.interfaceLanguages);
 
-    const mark = languageMark(page.interfaceLanguages) ?? oldMark ?? unknownLanguageMark;
-    return [mark, ...(page.hasDemo ? [demoTag] : []), ...others].join(' ');
+    let language: string;
+    if (!oldLanguage) {
+        language = mark ?? unknownLanguageMark;
+    } else if (mark !== null && languageRank(mark) < languageRank(oldLanguage)) {
+        language = mark;
+    } else {
+        language = oldLanguage;
+    }
+    return page.hasDemo ? `${language} ${demoTag}` : language;
 }
