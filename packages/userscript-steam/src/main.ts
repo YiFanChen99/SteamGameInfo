@@ -1,5 +1,5 @@
-import { extractAppId, steamDbPricesSelector } from '@watchlist/core';
-import { addGame, refreshGame, sheetApiRowStore } from '@watchlist/game-refresh';
+import { extractAppId } from '@watchlist/core';
+import { addGame, refreshGame, sheetApiRowStore } from '@watchlist/game-record-writer';
 import {
     createSheetApi,
     deployedWebAppUrl,
@@ -7,6 +7,7 @@ import {
     SheetApiUnauthorizedError,
     type SheetApi,
 } from '@watchlist/sheet-api';
+import { readSteamDbPrices } from '@watchlist/steam-info-scraper';
 
 import { fetchText, forgetToken, getToken, postText } from './gm';
 import { formatChange, Panel } from './panel';
@@ -61,15 +62,14 @@ function main(): void {
         panel.setState({ kind: action });
     }
 
-    /** Read on click: the SteamDB extension fills its block in after the page loads. */
-    const readSteamDbText = () => document.querySelector(steamDbPricesSelector)?.textContent ?? null;
     const noSteamDbNote = '沒有 SteamDB 區塊，最低off 沒有更新。';
 
     async function add(): Promise<void> {
         panel.setState({ kind: 'busy', label: '新增中…' });
-        const steamDbText = readSteamDbText();
+        // Read on click: the SteamDB extension fills its block in after the page loads.
+        const steamDb = readSteamDbPrices(document);
         try {
-            await withApi(api => addGame(appId!, { fetchText, store: sheetApiRowStore(api), steamDbText }));
+            await withApi(api => addGame(appId!, { fetchText, store: sheetApiRowStore(api), steamDb }));
         } catch (error) {
             if (!isSheetError(error, 'duplicate')) {
                 throw error;
@@ -79,16 +79,16 @@ function main(): void {
             return;
         }
         action = 'update';
-        panel.setState({ kind: 'update' }, steamDbText === null ? '已新增。沒有 SteamDB 區塊，最低off 寫 -。' : '已新增。');
+        panel.setState({ kind: 'update' }, steamDb === null ? '已新增。沒有 SteamDB 區塊，最低off 寫 -。' : '已新增。');
     }
 
     async function update(): Promise<void> {
         panel.setState({ kind: 'busy', label: '更新中…' });
-        const steamDbText = readSteamDbText();
+        const steamDb = readSteamDbPrices(document);
         try {
             const { changes } = await withApi(api =>
-                refreshGame(appId!, { fetchText, store: sheetApiRowStore(api), steamDbText }));
-            const lines = ['已更新。', ...changes.map(formatChange), ...(steamDbText === null ? [noSteamDbNote] : [])];
+                refreshGame(appId!, { fetchText, store: sheetApiRowStore(api), steamDb }));
+            const lines = ['已更新。', ...changes.map(formatChange), ...(steamDb === null ? [noSteamDbNote] : [])];
             panel.setState({ kind: 'update' }, lines.join('\n'));
         } catch (error) {
             if (!isSheetError(error, 'not-found')) {

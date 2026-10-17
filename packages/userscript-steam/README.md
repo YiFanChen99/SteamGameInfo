@@ -20,8 +20,8 @@
 - 資料一律重新抓 `?l=tchinese&cc=tw` 的商店頁與全語言評論，不受目前頁面的語言影響。
 - **最低off** 取自 SteamDB 擴充在頁面上加的區塊，按下按鈕時才讀；免費遊戲寫 `100`，沒有原價時不寫。沒有區塊時（沒裝或還沒載入），新增寫 `-`，更新則不動。
 - 新增：寫到第 4 列起第一個名稱空白的列，公式欄複製上一列，購買/期待度寫 `?`；頁面沒有價格時原價寫 `10000`。Sheet 已有這個 AppID 時會拒絕。
-- 更新：原價、上市、評價度、更新日、特、備註、最低off（規則見 `@watchlist/core` 的 `planRefresh`）；名稱、購買/期待度、模式不動。
-- 每個 fixture 遊戲實際送出的資料見 `packages/game-refresh/test/__snapshots__/payloads.test.ts.snap`。
+- 更新：原價、上市、評價度、更新日、特、備註、最低off（規則見 `@watchlist/game-record-writer` 的 `COLUMNS.md`）；名稱、購買/期待度、模式不動。
+- 每個 fixture 遊戲實際送出的資料見 `packages/game-record-writer/test/__snapshots__/payloads.test.ts.snap`。
 
 ## Development
 

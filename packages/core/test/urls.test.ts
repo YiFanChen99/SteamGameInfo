@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { appReviewsUrl, extractAppId, storePageFetchUrl, storePageUrl } from '../src';
+import { extractAppId, storePageUrl } from '../src';
 
 describe('extractAppId', () => {
     it.each([
@@ -13,10 +13,8 @@ describe('extractAppId', () => {
     });
 });
 
-describe('Steam URLs', () => {
-    it('builds the canonical, fetch and reviews URLs', () => {
+describe('storePageUrl', () => {
+    it('builds the canonical URL', () => {
         expect(storePageUrl(570)).toBe('https://store.steampowered.com/app/570/');
-        expect(storePageFetchUrl(570)).toBe('https://store.steampowered.com/app/570/?l=tchinese&cc=tw');
-        expect(appReviewsUrl(570)).toContain('/appreviews/570?json=1&language=all');
     });
 });

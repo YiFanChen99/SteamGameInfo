@@ -1,0 +1,21 @@
+{
+  "name": "@watchlist/game-record-writer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Every rule for adding and updating a game row of the watchlist sheet, and the flows that apply them",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit && eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@watchlist/core": "workspace:*",
+    "@watchlist/sheet-api": "workspace:*",
+    "@watchlist/steam-info-scraper": "workspace:*"
+  }
+}

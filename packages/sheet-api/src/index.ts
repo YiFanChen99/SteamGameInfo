@@ -1,4 +1,7 @@
-import type { ColumnName, FetchText, PostText, SheetRowValues } from '@watchlist/core';
+import type { FetchText, PostText } from '@watchlist/core';
+
+/** Cells of one row, keyed by header name. The rules for which cells to send live in game-record-writer. */
+export type RowValues = Record<string, string | number>;
 
 /**
  * One row of the whole-sheet dump, keyed by column letter to keep the payload small.
@@ -35,7 +38,7 @@ export interface RowResponse {
     /** 1-based sheet row. */
     row: number;
     /** The requested columns, keyed by header name. Dates come as `YYYY/M/D`. */
-    values: SheetRowValues;
+    values: RowValues;
 }
 
 /** POST body: write cells of the row with `appId`, or add a row for it. */
@@ -43,7 +46,7 @@ export interface WriteRequest {
     action: 'update' | 'append';
     appId: number;
     /** Keyed by header name; the web app refuses columns it does not allow writing. */
-    values: SheetRowValues;
+    values: RowValues;
 }
 
 /** Response of a POST. */
@@ -98,13 +101,13 @@ export interface SheetApi {
     /** The whole sheet, as the web app dumps it. */
     fetchDump(): Promise<SheetDump>;
     /** Rejects with code `not-found` when no row has `appId`. */
-    readRow(appId: number, columns: readonly ColumnName[]): Promise<RowResponse>;
+    readRow(appId: number, columns: readonly string[]): Promise<RowResponse>;
     /** @returns The row with `appId`, or null. */
     findRow(appId: number): Promise<number | null>;
     /** Write only the given cells of the row with `appId`. */
-    updateRow(appId: number, values: SheetRowValues): Promise<WriteResponse>;
+    updateRow(appId: number, values: RowValues): Promise<WriteResponse>;
     /** Add a row for `appId`; rejects with code `duplicate` when the sheet already has one. */
-    appendRow(appId: number, values: SheetRowValues): Promise<WriteResponse>;
+    appendRow(appId: number, values: RowValues): Promise<WriteResponse>;
 }
 
 function parseResponse<T>(body: string): T {

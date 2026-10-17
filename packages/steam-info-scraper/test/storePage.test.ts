@@ -1,0 +1,119 @@
+import { describe, expect, it } from 'vitest';
+
+import { parseStorePage, type CalendarDate } from '../src';
+import { loadStorePage } from './fixtures';
+
+interface Expected {
+    name: string;
+    originalPrice: number | null;
+    releaseDate: CalendarDate;
+    isEarlyAccess: boolean;
+    hasDemo: boolean;
+    /** Interface languages that must, and must not, be listed. */
+    supports: string[];
+    lacks: string[];
+    firstTags: string[];
+}
+
+const cases: Record<number, Expected> = {
+    1145360: {
+        name: 'Hades',
+        originalPrice: 408,
+        releaseDate: { year: 2020, month: 9, day: 17 },
+        isEarlyAccess: false,
+        hasDemo: false,
+        supports: ['簡體中文', '英文'],
+        lacks: ['繁體中文'],
+        firstTags: ['動作類 Rogue', '輕度 Rogue'],
+    },
+    1562430: {
+        name: 'DREDGE',
+        originalPrice: 799,
+        releaseDate: { year: 2023, month: 3, day: 30 },
+        isEarlyAccess: false,
+        hasDemo: false,
+        supports: ['繁體中文'],
+        lacks: [],
+        firstTags: ['探索', '釣魚'],
+    },
+    2868840: {
+        name: 'Slay the Spire 2',
+        originalPrice: 499,
+        releaseDate: { year: 2026, month: 3, day: 5 },
+        isEarlyAccess: true,
+        hasDemo: false,
+        supports: ['簡體中文'],
+        lacks: ['繁體中文'],
+        firstTags: ['類 Rogue', '卡牌遊戲'],
+    },
+    1966720: {
+        name: 'Lethal Company',
+        originalPrice: 188,
+        releaseDate: { year: 2023, month: 10, day: 23 },
+        isEarlyAccess: true,
+        hasDemo: false,
+        supports: ['英文'],
+        lacks: ['繁體中文', '簡體中文'],
+        firstTags: ['線上合作', '恐怖'],
+    },
+    3669620: {
+        name: 'Warhammer Survivors',
+        originalPrice: null,
+        releaseDate: { year: 2026, month: 11, day: 10 },
+        isEarlyAccess: false,
+        hasDemo: true,
+        supports: ['簡體中文'],
+        lacks: ['繁體中文'],
+        firstTags: ['動作', '逆彈幕'],
+    },
+    570: {
+        name: 'Dota 2',
+        originalPrice: 0,
+        releaseDate: { year: 2013, month: 7, day: 9 },
+        isEarlyAccess: false,
+        hasDemo: false,
+        supports: ['繁體中文'],
+        lacks: [],
+        firstTags: ['免費遊玩', '多人線上戰術競技'],
+    },
+};
+
+describe('parseStorePage', () => {
+    it.each(Object.entries(cases))('parses app %s', (appId, expected) => {
+        const { supports, lacks, firstTags, releaseDate, ...fields } = expected;
+        const info = parseStorePage(loadStorePage(Number(appId)));
+
+        expect(info).toMatchObject(fields);
+        expect(info.releaseDate?.date).toEqual(releaseDate);
+        expect(info.interfaceLanguages).toEqual(expect.arrayContaining(supports));
+        for (const language of lacks) {
+            expect(info.interfaceLanguages).not.toContain(language);
+        }
+        expect(info.tags.slice(0, firstTags.length)).toEqual(firstTags);
+        expect(new Set(info.tags).size).toBe(info.tags.length);
+    });
+
+    it('returns nulls on a page without those sections', () => {
+        const doc = new DOMParser().parseFromString('<html><body></body></html>', 'text/html');
+        expect(parseStorePage(doc)).toEqual({
+            name: null,
+            originalPrice: null,
+            releaseDate: null,
+            isEarlyAccess: false,
+            hasDemo: false,
+            interfaceLanguages: null,
+            tags: [],
+        });
+    });
+
+    it('lists only languages with a check mark in the interface column', () => {
+        const doc = new DOMParser().parseFromString(`
+            <div id="languageTable"><table>
+                <tr><th></th><th>介面</th></tr>
+                <tr><td>繁體中文</td><td colspan="3">不支援</td></tr>
+                <tr><td>英文</td><td></td><td><span>&#10004;</span></td></tr>
+                <tr><td>日文</td><td><span>&#10004;</span></td></tr>
+            </table></div>`, 'text/html');
+        expect(parseStorePage(doc).interfaceLanguages).toEqual(['日文']);
+    });
+});

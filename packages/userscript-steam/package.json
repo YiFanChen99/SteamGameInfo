@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "@watchlist/core": "workspace:*",
-    "@watchlist/game-refresh": "workspace:*",
-    "@watchlist/sheet-api": "workspace:*"
+    "@watchlist/game-record-writer": "workspace:*",
+    "@watchlist/sheet-api": "workspace:*",
+    "@watchlist/steam-info-scraper": "workspace:*"
   }
 }

@@ -1,2 +1,2 @@
 # Saved Steam responses: keep them byte-for-byte as fetched.
-packages/core/test/fixtures/** -text
+packages/steam-info-scraper/test/fixtures/** -text

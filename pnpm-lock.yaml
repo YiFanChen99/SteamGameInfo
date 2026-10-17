@@ -35,6 +35,9 @@ importers:
       '@watchlist/core':
         specifier: workspace:*
         version: link:../core
+      '@watchlist/game-record-writer':
+        specifier: workspace:*
+        version: link:../game-record-writer
       '@watchlist/sheet-api':
         specifier: workspace:*
         version: link:../sheet-api
@@ -51,7 +54,7 @@ importers:
 
   packages/core: {}
 
-  packages/game-refresh:
+  packages/game-record-writer:
     dependencies:
       '@watchlist/core':
         specifier: workspace:*
@@ -59,10 +62,19 @@ importers:
       '@watchlist/sheet-api':
         specifier: workspace:*
         version: link:../sheet-api
+      '@watchlist/steam-info-scraper':
+        specifier: workspace:*
+        version: link:../steam-info-scraper
 
   packages/price-lookup: {}
 
   packages/sheet-api:
+    dependencies:
+      '@watchlist/core':
+        specifier: workspace:*
+        version: link:../core
+
+  packages/steam-info-scraper:
     dependencies:
       '@watchlist/core':
         specifier: workspace:*
@@ -77,12 +89,15 @@ importers:
       '@watchlist/core':
         specifier: workspace:*
         version: link:../core
-      '@watchlist/game-refresh':
+      '@watchlist/game-record-writer':
         specifier: workspace:*
-        version: link:../game-refresh
+        version: link:../game-record-writer
       '@watchlist/sheet-api':
         specifier: workspace:*
         version: link:../sheet-api
+      '@watchlist/steam-info-scraper':
+        specifier: workspace:*
+        version: link:../steam-info-scraper
     devDependencies:
       '@types/tampermonkey':
         specifier: ^5.0.4

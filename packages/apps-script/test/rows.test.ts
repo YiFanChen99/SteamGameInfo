@@ -1,4 +1,4 @@
-import { Column } from '@watchlist/core';
+import { Column } from '@watchlist/game-record-writer';
 import { describe, expect, it } from 'vitest';
 
 import {

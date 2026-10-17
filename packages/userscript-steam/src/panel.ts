@@ -1,4 +1,4 @@
-import { Column, type ValueChange } from '@watchlist/core';
+import { Column, type ValueChange } from '@watchlist/game-record-writer';
 
 export type PanelState =
     | { kind: 'checking' }

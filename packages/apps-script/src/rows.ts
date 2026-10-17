@@ -1,4 +1,11 @@
-import { Column, extractAppId, type CellValue as RowCellValue, type ColumnName, type SheetRowValues } from '@watchlist/core';
+import { extractAppId } from '@watchlist/core';
+import {
+    Column,
+    updatableColumns,
+    type CellValue as RowCellValue,
+    type ColumnName,
+    type SheetRowValues,
+} from '@watchlist/game-record-writer';
 import type { SheetApiErrorCode } from '@watchlist/sheet-api';
 
 import type { CellValue } from './dump';
@@ -9,19 +16,6 @@ export const headerRow = 1;
 export const firstDataRow = 2;
 /** `append` fills the first row from here whose name is blank. */
 export const firstAppendRow = 4;
-
-/** Columns a request may write. The name only on append: it is how a row is found again. */
-const updatableColumns: ReadonlySet<ColumnName> = new Set([
-    Column.originalPrice,
-    Column.lowestOff,
-    Column.releaseDate,
-    Column.reviewScore,
-    Column.updatedOn,
-    Column.wantLevel,
-    Column.mode,
-    Column.special,
-    Column.detail,
-]);
 
 /** A refusal to send back as `SheetApiErrorBody`. */
 export class RequestError extends Error {

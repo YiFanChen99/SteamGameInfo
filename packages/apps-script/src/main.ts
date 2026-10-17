@@ -2,7 +2,7 @@
  * Entry points. scripts/build.mjs declares a global function for each export here,
  * because Apps Script only finds top-level function declarations.
  */
-import { Column } from '@watchlist/core';
+import { Column } from '@watchlist/game-record-writer';
 import {
     rowAction,
     tokenParam,

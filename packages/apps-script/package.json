@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@watchlist/core": "workspace:*",
+    "@watchlist/game-record-writer": "workspace:*",
     "@watchlist/sheet-api": "workspace:*"
   },
   "devDependencies": {
