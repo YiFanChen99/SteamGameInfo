@@ -5,6 +5,8 @@ import { fixtureFetchText } from '../../steam-info-scraper/test/fixtures';
 import {
     addGame,
     Column,
+    extractPlaytime,
+    fetchPlaytime,
     refreshGame,
     refreshReadColumns,
     sheetApiRowStore,
@@ -95,5 +97,18 @@ describe('sheetApiRowStore', () => {
         expect(api.readRow).toHaveBeenCalledWith(570, [Column.special]);
         expect(api.updateRow).toHaveBeenCalledWith(570, { [Column.special]: '繁' });
         expect(api.appendRow).toHaveBeenCalledWith(571, { [Column.special]: 'X' });
+    });
+});
+
+describe('fetchPlaytime', () => {
+    it('fetches only the review sample and formats it as refreshGame does', async () => {
+        const fetchText = vi.fn(fixtureFetchText);
+
+        const playtime = await fetchPlaytime(2868840, fetchText);
+
+        expect(fetchText.mock.calls.every(([url]) => url.includes('/appreviews/'))).toBe(true);
+        const { updates } = await refreshGame(2868840, { fetchText: fixtureFetchText, store: fakeStore({}).store });
+        expect(playtime).toBe(extractPlaytime(String(updates[Column.detail])));
+        expect(playtime).toMatch(/^中位\d+H，3rd\.高\d+H。$/);
     });
 });

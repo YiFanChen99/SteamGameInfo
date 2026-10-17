@@ -1,9 +1,11 @@
 import type { FetchText } from '@watchlist/core';
 import type { SheetApi } from '@watchlist/sheet-api';
-import { fetchSteamSnapshot, type ParseHtml, type SteamDbPrices } from '@watchlist/steam-info-scraper';
+import { fetchPlaytimeSample, fetchSteamSnapshot, type ParseHtml, type SteamDbPrices } from '@watchlist/steam-info-scraper';
 
 import type { ColumnName, SheetRowValues } from './columns';
+import { formatPlaytime } from './detail';
 import { planLowestOff } from './lowestOff';
+import { computePlaytimeStats } from './playtime';
 import { planNewRow } from './newRow';
 import { planRefresh, refreshReadColumns, type RefreshPlan } from './refresh';
 
@@ -79,4 +81,13 @@ export async function addGame(appId: number, deps: RefreshDeps): Promise<SheetRo
     });
     await deps.store.append(appId, row);
     return row;
+}
+
+/**
+ * Only the playtime part of 備註, from a fresh review sample; nothing is read or written in the sheet.
+ *
+ * @returns e.g. `中位12H，3rd.高85H。`
+ */
+export async function fetchPlaytime(appId: number, fetchText: FetchText): Promise<string> {
+    return formatPlaytime(computePlaytimeStats(await fetchPlaytimeSample(appId, fetchText)));
 }

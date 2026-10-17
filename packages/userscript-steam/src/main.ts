@@ -1,5 +1,12 @@
 import { extractAppId } from '@watchlist/core';
-import { addGame, formatChange, MissingValueError, refreshGame, sheetApiRowStore } from '@watchlist/game-record-writer';
+import {
+    addGame,
+    fetchPlaytime,
+    formatChange,
+    MissingValueError,
+    refreshGame,
+    sheetApiRowStore,
+} from '@watchlist/game-record-writer';
 import {
     createSheetApi,
     deployedWebAppUrl,
@@ -9,7 +16,7 @@ import {
 } from '@watchlist/sheet-api';
 import { readSteamDbPrices } from '@watchlist/steam-info-scraper';
 
-import { fetchText, forgetToken, getToken, postText } from './gm';
+import { copyText, fetchText, forgetToken, getToken, postText } from './gm';
 import { Panel } from './panel';
 
 /**
@@ -54,7 +61,24 @@ function main(): void {
     let action: Action = 'check';
     const panel = new Panel(() => {
         void run(action);
+    }, () => {
+        void copyPlaytime();
     });
+
+    /** Only the playtime part of 備註, to the clipboard; the sheet is not touched. */
+    async function copyPlaytime(): Promise<void> {
+        panel.setPlaytimeBusy(true);
+        try {
+            const playtime = await fetchPlaytime(appId!, fetchText);
+            copyText(playtime);
+            panel.showMessage(`已複製：${playtime}`, false);
+        } catch (error) {
+            console.error('Steam Sheet Writer:', error);
+            panel.showMessage(error instanceof Error ? error.message : String(error), true);
+        } finally {
+            panel.setPlaytimeBusy(false);
+        }
+    }
 
     async function check(): Promise<void> {
         const row = await withApi(api => api.findRow(appId!));

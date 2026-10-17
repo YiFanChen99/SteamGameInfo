@@ -45,3 +45,7 @@ export function getToken(): string | null {
 export function forgetToken(): void {
     GM_deleteValue(tokenKey);
 }
+
+export function copyText(text: string): void {
+    GM_setClipboard(text, 'text');
+}

@@ -14,8 +14,11 @@ export type ParseHtml = (html: string) => Document;
 
 const parseWithDomParser: ParseHtml = html => new DOMParser().parseFromString(html, 'text/html');
 
-/** The playtime sample: the first day range holding a full sample, else the largest one found. */
-async function fetchPlaytimeSample(appId: number, fetchText: FetchText): Promise<number[]> {
+/**
+ * Each sampled reviewer's total playtime, in minutes: the first day range holding a full sample,
+ * else the largest one found.
+ */
+export async function fetchPlaytimeSample(appId: number, fetchText: FetchText): Promise<number[]> {
     let sample: number[] = [];
     for (const dayRange of reviewSampleDayRanges) {
         const minutes = parseReviewSample(await fetchText(appReviewsUrl(appId, dayRange)));

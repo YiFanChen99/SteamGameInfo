@@ -20,7 +20,7 @@ export const metadata = {
     description: pkg.description,
     author: pkg.author,
     match: ['*://store.steampowered.com/app/*'],
-    grant: ['GM_xmlhttpRequest', 'GM_getValue', 'GM_setValue', 'GM_deleteValue'],
+    grant: ['GM_xmlhttpRequest', 'GM_getValue', 'GM_setValue', 'GM_deleteValue', 'GM_setClipboard'],
     connect: [
         'script.google.com',
         // Apps Script web apps 302-redirect /exec responses here.

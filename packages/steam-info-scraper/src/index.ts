@@ -16,4 +16,4 @@ export {
     type ReviewSummary,
 } from './appReviews';
 export { parseSteamDbPrices, readSteamDbPrices, steamDbPricesSelector, type SteamDbPrices } from './steamDb';
-export { fetchSteamSnapshot, type ParseHtml, type SteamSnapshot } from './snapshot';
+export { fetchPlaytimeSample, fetchSteamSnapshot, type ParseHtml, type SteamSnapshot } from './snapshot';

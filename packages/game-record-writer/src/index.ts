@@ -25,6 +25,7 @@ export {
 export { buildNameFormula, MissingValueError, planNewRow, unratedWantLevel, type NewRowInput } from './newRow';
 export {
     addGame,
+    fetchPlaytime,
     refreshGame,
     sheetApiRowStore,
     type RefreshDeps,
