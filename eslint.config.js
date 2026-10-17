@@ -3,9 +3,8 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-// Shared by every package without its own eslint.config.js. ESLint uses the
-// config nearest to each linted file, so packages/userscript-steamgifts keeps
-// its own config until it is folded into this one.
+// Shared by every package. ESLint uses the config nearest to each linted file,
+// so a package only needs its own eslint.config.js to diverge from this one.
 export default defineConfig([
     globalIgnores(['**/dist/', '**/legacy/', '_site/']),
 

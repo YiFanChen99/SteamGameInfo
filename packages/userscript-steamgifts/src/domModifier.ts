@@ -1,3 +1,5 @@
+import { createNameMatcher } from '@watchlist/core';
+
 import type { SheetData, SheetGame } from './types';
 
 /**
@@ -30,40 +32,15 @@ class HeaderDisplayFormatter {
     }
 }
 
-/**
- * A `SheetGame` with its name pre-normalized for comparison.
- */
-interface PreparedGame extends SheetGame {
-    name: string;
-    subNames: string[];
-}
-
 export class HeaderModifier {
     /**
-     * Precomputed `sheetData.games`
+     * Matches a giveaway name (maybe with an extra 'xxx edition') to sheet games.
+     * One game on exact match, otherwise all partial matches.
      */
-    private readonly games: PreparedGame[];
+    private readonly matchGames: (rawName: string) => SheetGame[];
 
     constructor(sheetData: SheetData) {
-        this.games = sheetData.games.map(game => ({
-            ...game,
-            name: HeaderModifier.normalize(game.B),
-            subNames: game.B
-                .split('/')
-                .map(part => HeaderModifier.normalize(part))
-                .filter(Boolean),
-        }));
-    }
-
-    /**
-     * Normalize a name for comparison: case, trademark symbols, whitespace.
-     */
-    private static normalize(name: string): string {
-        return name
-            .replace(/[™®©]/g, '')
-            .replace(/\s+/g, ' ')
-            .trim()
-            .toLowerCase();
+        this.matchGames = createNameMatcher(sheetData.games, game => game.B);
     }
 
     /**
@@ -91,37 +68,6 @@ export class HeaderModifier {
     }
 
     /**
-     * Match by game name.
-     * @param rawName Maybe with extra 'xxx edition'.
-     * @returns Only one game on exact match. Or all partial matches.
-     */
-    private matchGames(games: PreparedGame[], rawName: string): PreparedGame[] {
-        const name = HeaderModifier.normalize(rawName);
-        const nameWithoutEdition = HeaderModifier.normalize(
-            rawName.replace(/[\s:-]+\w+\s+edition$/i, '')
-        );
-
-        const candidates = games.filter((game) => game.name.includes(nameWithoutEdition));
-        if (!candidates.length) {
-            return candidates;
-        }
-
-        const exactMatches = candidates.filter(game => {
-            if (game.name === name) { return true; }
-            return game.subNames.includes(name);
-        });
-        if (exactMatches.length) {
-            return exactMatches;
-        }
-
-        const exactMatchesWithoutEdition = candidates.filter(game => {
-            if (game.name === nameWithoutEdition) { return true; }
-            return game.subNames.includes(nameWithoutEdition);
-        });
-        return exactMatchesWithoutEdition.length ? exactMatchesWithoutEdition : candidates;
-    }
-
-    /**
      * Match header name with sheet data and modify DOM
      * @returns Whether modified successfully
      */
@@ -129,7 +75,7 @@ export class HeaderModifier {
         if (!headerElement) return false;
 
         const name = headerElement.innerText.replace(/(\.{3})$/, '');
-        const games = this.matchGames(this.games, name);
+        const games = this.matchGames(name);
 
         if (!games.length) {
             return false;
@@ -314,10 +260,10 @@ export class RegionModifier {
             return 0;
         }
 
-        const matched = /(?:\d+) to (?:\d+) of (\d+) result/.exec(text);
-        if (!matched) {
+        const total = /(?:\d+) to (?:\d+) of (\d+) result/.exec(text)?.[1];
+        if (total === undefined) {
             throw new Error(`Unexpected results text format: ${text}`);
         }
-        return parseInt(matched[1], 10);
+        return parseInt(total, 10);
     }
 }

@@ -53,28 +53,17 @@ importers:
   packages/userscript-sheet: {}
 
   packages/userscript-steamgifts:
+    dependencies:
+      '@watchlist/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
-      '@eslint/js':
-        specifier: ^10.0.1
-        version: 10.0.1(eslint@10.13.0)
       '@types/tampermonkey':
         specifier: ^5.0.4
         version: 5.5.0
       esbuild:
         specifier: ^0.25.0
         version: 0.25.12
-      eslint:
-        specifier: ^10.8.1
-        version: 10.13.0
-      globals:
-        specifier: ^17.10.0
-        version: 17.13.0
-      typescript:
-        specifier: ^5.7.0
-        version: 5.9.3
-      typescript-eslint:
-        specifier: ^8.67.0
-        version: 8.71.2(eslint@10.13.0)(typescript@5.9.3)
 
 packages:
 

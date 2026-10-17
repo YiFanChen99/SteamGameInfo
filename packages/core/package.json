@@ -5,6 +5,7 @@
   "description": "Pure functions shared by the watchlist tools: Steam parsing, playtime stats, sheet columns, name matching, merge rules",
   "license": "MIT",
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts"
   },
