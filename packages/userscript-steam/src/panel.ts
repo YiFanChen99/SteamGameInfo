@@ -19,7 +19,7 @@ const playtimeLabel = '時長';
 const messageLifetimeMs = 60_000;
 
 /**
- * The sheet button with a half-width playtime button on its right, plus a status line under
+ * The sheet button with a narrower playtime button on its right, plus a status line under
  * them, fixed at the page's top right.
  */
 export class Panel {
@@ -40,8 +40,8 @@ export class Panel {
             display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px',
         });
         const buttons = document.createElement('div');
-        Object.assign(buttons.style, { display: 'flex', gap: '4px' });
-        Object.assign(this.button.style, { height: '32px', minWidth: '96px', padding: '0 12px', cursor: 'pointer' });
+        Object.assign(buttons.style, { display: 'flex', gap: '6px' });
+        Object.assign(this.button.style, { height: '32px', minWidth: '86px', padding: '0 12px', cursor: 'pointer' });
         Object.assign(this.playtimeButton.style, { height: '32px', minWidth: '48px', padding: '0 6px', cursor: 'pointer' });
         Object.assign(this.status.style, {
             maxWidth: '320px', padding: '2px 6px', whiteSpace: 'pre-line', textAlign: 'right',
