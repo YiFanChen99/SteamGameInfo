@@ -1,11 +1,9 @@
 import type { FetchText } from '@watchlist/core';
-import { createSheetApi, SheetApiUnauthorizedError } from '@watchlist/sheet-api';
+import { createSheetApi, deployedWebAppUrl, SheetApiUnauthorizedError } from '@watchlist/sheet-api';
 
 import type { SheetData } from './types';
 
 const updateDurationMs = 24 * 60 * 60 * 1000; // 24 hours
-
-const webAppUrl = 'https://script.google.com/macros/s/AKfycbyLkj1F4DL_h8QTn1-jXGPJpVBoo0w5M5nwhuzzlmquqRFvkr6w69nD63Otl6pmOIZS/exec';
 
 /** Tampermonkey storage key of the token the web app checks. */
 const tokenKey = 'sheetApiToken';
@@ -52,7 +50,7 @@ async function fetchData(): Promise<SheetData> {
             throw new Error('SG-Annotator: no Sheet API token');
         }
         try {
-            const dump = await createSheetApi({ webAppUrl, token, fetchText }).fetchDump();
+            const dump = await createSheetApi({ webAppUrl: deployedWebAppUrl, token, fetchText }).fetchDump();
             const data: SheetData = { ...dump, time: Date.now() };
             localStorage.setItem('ekkoGames', JSON.stringify(data));
             return data;

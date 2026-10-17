@@ -39,7 +39,7 @@ pnpm dlx @google/clasp deployments                   # 列出部署
 pnpm dlx @google/clasp deploy -i <deploymentId>      # 把既有部署更新到新版本，/exec URL 不變
 ```
 
-`clasp deploy` 不帶 `-i` 會新建一個部署（新的 URL）。userscript 用的部署 ID 寫在 `packages/userscript-steamgifts/src/sheetFetcher.ts`。
+`clasp deploy` 不帶 `-i` 會新建一個部署（新的 URL）。userscript 用的部署 URL 寫在 `packages/sheet-api/src/index.ts` 的 `deployedWebAppUrl`。
 
 ### token
 

@@ -18,6 +18,9 @@ export interface SheetDump {
     labelMap: Record<string, unknown>;
 }
 
+/** `/exec` URL of the token-guarded deployment (「token API」) the userscripts call. */
+export const deployedWebAppUrl = 'https://script.google.com/macros/s/AKfycbyLkj1F4DL_h8QTn1-jXGPJpVBoo0w5M5nwhuzzlmquqRFvkr6w69nD63Otl6pmOIZS/exec';
+
 /** Query parameter that carries the shared token, on GET and POST alike. */
 export const tokenParam = 'token';
 
